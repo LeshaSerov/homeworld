@@ -16,7 +16,7 @@ import java.util.ArrayList;
 public class MemberDao {
     private static final Logger LOGGER = Logger.getLogger(MemberDao.class);
 
-    private static Member getMemberFromResultSet(ResultSet resultSet)
+    protected static Member getMemberFromResultSet(ResultSet resultSet)
     {
         try {
             return Member.builder()
@@ -32,7 +32,7 @@ public class MemberDao {
         return null;
     }
 
-    private static Member getMemberWithTheRoleFromResultSet(ResultSet resultSet)
+    protected static Member getMemberWithTheRoleAndNumberOfWarningsFromResultSet(ResultSet resultSet)
     {
         try {
             return Member.builder()
@@ -47,6 +47,7 @@ public class MemberDao {
                             .right_edit(resultSet.getBoolean(8))
                             .right_admin(resultSet.getBoolean(9))
                             .build())
+                    .number_of_warning(resultSet.getInt(10))
                     .build();
         }
         catch (SQLException e){
@@ -55,66 +56,41 @@ public class MemberDao {
         return null;
     }
 
-    public static ArrayList<Member> getAllMemberInChat(Integer id_chat) throws IOException, SQLException {
-        ArrayList<Member> result = new ArrayList<>();
-        String SQL_ALL_MEMBERS_IN_CHAT = """
-                 SELECT id, first_name, last_name, user_name FROM members,
-                 members_in_chat WHERE members.id=members_in_chat.id_member and id_chat=?""";
+    public static Boolean addMember(Integer id, String first_name, String last_name, String user_name) throws IOException, SQLException {
+        String SQL = """
+                INSERT INTO members (id, first_name, last_name, user_name) VALUES (?, ?, ?, ?);
+                """;
         try (Connection connection = new JdbcConnection().CreateConnect();
-             PreparedStatement preparedStatement = connection.prepareStatement(SQL_ALL_MEMBERS_IN_CHAT)){
-            preparedStatement.setInt(1, id_chat);
-            try (ResultSet resultSet = preparedStatement.executeQuery()){
-                while (resultSet.next())
-                {
-                    result.add(getMemberFromResultSet(resultSet));
-                }
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1, id);
+            preparedStatement.setString(2, first_name);
+            preparedStatement.setString(3, last_name);
+            preparedStatement.setString(4, user_name);
+            try {
+                Integer result = preparedStatement.executeUpdate();
+                return true;
+            } catch (SQLException e) {
+                return false;
             }
         }
-        return result;
     }
 
-    public static ArrayList<Member> getAllMemberInGroup(Integer id_group) throws IOException, SQLException {
-        ArrayList<Member> result = new ArrayList<>();
-        String SQL_ALL_MEMBERS_IN_GROUP = """
-                SELECT members.id, first_name, last_name, user_name,
-                id_role, right_to_view, right_ping, right_edit, right_admin
-                FROM members, members_in_group, roles
-                WHERE members.id=members_in_group.id_member
-                and roles.id=members_in_group.id_role and id_group=?""";
-
+    public static Boolean editMember(Integer id, String first_name, String last_name, String user_name) throws IOException, SQLException {
+        String SQL = """
+                UPDATE members SET first_name = ? AND last_name = ? AND user_name = ? WHERE id = ?;
+                """;
         try (Connection connection = new JdbcConnection().CreateConnect();
-             PreparedStatement preparedStatement = connection.prepareStatement(SQL_ALL_MEMBERS_IN_GROUP)){
-            preparedStatement.setInt(1, id_group);
-            try (ResultSet resultSet = preparedStatement.executeQuery()){
-                while (resultSet.next())
-                {
-                    result.add(getMemberWithTheRoleFromResultSet(resultSet));
-                }
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(4, id);
+            preparedStatement.setString(1, first_name);
+            preparedStatement.setString(2, last_name);
+            preparedStatement.setString(3, user_name);
+            try {
+                return preparedStatement.executeUpdate() != 0;
+            } catch (SQLException e) {
+                return false;
             }
         }
-        return result;
     }
 
-    public static ArrayList<Member> getMemberInGroupInChat(Integer id_group, Integer id_chat) throws IOException, SQLException {
-        ArrayList<Member> result = new ArrayList<>();
-        String SQL_MEMBERS_IN_GROUP_IN_CHAT = """
-                SELECT members.id, first_name, last_name, user_name,
-                id_role, right_to_view, right_ping, right_edit, right_admin
-                FROM members, members_in_group, members_in_chat, roles
-                WHERE members.id=members_in_chat.id_member
-                and members.id=members_in_group.id_member
-                and roles.id=members_in_group.id_role and id_group=? and id_chat=?""";
-        try (Connection connection = new JdbcConnection().CreateConnect();
-             PreparedStatement preparedStatement = connection.prepareStatement(SQL_MEMBERS_IN_GROUP_IN_CHAT)){
-            preparedStatement.setInt(1, id_group);
-            preparedStatement.setInt(2, id_chat);
-            try (ResultSet resultSet = preparedStatement.executeQuery()){
-                while (resultSet.next())
-                {
-                    result.add(getMemberWithTheRoleFromResultSet(resultSet));
-                }
-            }
-        }
-        return result;
-    }
 }

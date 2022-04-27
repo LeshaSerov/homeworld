@@ -9,8 +9,6 @@ import lombok.Setter;
 @Setter
 public class Chat {
     Integer id;
-    String name;
-    String address;
-    String link;
-    Boolean can_ping;
+    String title;
+    Boolean ping;
 }

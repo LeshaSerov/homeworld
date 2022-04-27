@@ -9,5 +9,5 @@ import lombok.Setter;
 @Setter
 public class Group {
     Integer id;
-    String name;
+    String title;
 }

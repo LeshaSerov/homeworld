@@ -12,6 +12,7 @@ public class Member {
     String first_name;
     String last_name;
     String user_name;
+    Integer number_of_warning;
     Role role = null;
 
     public Boolean isEmptyRole(){

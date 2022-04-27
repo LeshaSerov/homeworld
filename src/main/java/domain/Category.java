@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 public class Category {
     Integer id;
-    String name;
-    Boolean public_all;
+    String title;
+    Integer id_group;
 }

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class RoleDao {
     private static final Logger LOGGER = Logger.getLogger(MemberDao.class);
 
-    private static Role getRoleFromResultSet(ResultSet resultSet)
+    protected static Role getRoleFromResultSet(ResultSet resultSet)
     {
         try {
             return Role.builder()

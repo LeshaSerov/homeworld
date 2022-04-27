@@ -6,13 +6,11 @@ import lombok.Setter;
 
 import java.sql.Date;
 
-@Builder
-@Getter
-@Setter
-public class File {
-    Integer id;
+public class Warning {
+    Integer id_member;
     Integer id_group;
-    Integer id_category;
-    String title;
-    Date data_create;
+    Integer id_cautioning;
+    String cause;
+    Date date;
+    Integer deadline;
 }

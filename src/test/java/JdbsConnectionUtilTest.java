@@ -22,7 +22,7 @@ public class JdbsConnectionUtilTest {
     @Test
     public void a() throws SQLException, IOException {
         try {
-            System.out.println(GroupDao.addGroup("asd"));
+            System.out.println(GroupDao.editGroup(47,"qwe"));
         }
         catch (SQLException e){
 
