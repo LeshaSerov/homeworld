@@ -32,7 +32,7 @@ public class MemberDao {
         return null;
     }
 
-    protected static Member getMemberWithTheRoleAndNumberOfWarningsFromResultSet(ResultSet resultSet)
+    protected static Member getMemberExtendedFromResultSet(ResultSet resultSet)
     {
         try {
             return Member.builder()
