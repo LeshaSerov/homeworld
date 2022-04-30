@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class RoleDao {
-    private static final Logger LOGGER = Logger.getLogger(MemberDao.class);
+    private static final Logger LOGGER = Logger.getLogger(RoleDao.class);
 
     protected static Role getRoleFromResultSet(ResultSet resultSet)
     {

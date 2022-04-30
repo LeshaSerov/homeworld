@@ -14,7 +14,7 @@ import static business.MemberDao.getMemberExtendedFromResultSet;
 import static business.MemberDao.getMemberFromResultSet;
 
 public class GroupDao {
-    private static final Logger LOGGER = Logger.getLogger(MemberDao.class);
+    private static final Logger LOGGER = Logger.getLogger(GroupDao.class);
 
     protected static Warning getWarningFromResultSet(ResultSet resultSet) {
         try {
