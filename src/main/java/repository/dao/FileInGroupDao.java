@@ -1,4 +1,4 @@
-package business;
+package repository.dao;
 
 public class FileInGroupDao {
 

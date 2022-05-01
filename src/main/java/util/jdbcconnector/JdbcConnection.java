@@ -1,6 +1,6 @@
-package jdbcconnector;
+package util.jdbcconnector;
 
-import configuration.PropertyReader;
+import util.configuration.PropertyReader;
 
 import java.io.IOException;
 import java.sql.Connection;

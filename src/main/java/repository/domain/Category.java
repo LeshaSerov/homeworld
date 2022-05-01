@@ -1,4 +1,4 @@
-package domain;
+package repository.domain;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -7,8 +7,8 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class Chat {
+public class Category {
     Integer id;
     String title;
-    Boolean ping;
+    Integer id_group;
 }

@@ -1,7 +1,7 @@
-package business;
+package repository.dao;
 
-import domain.Role;
-import jdbcconnector.JdbcConnection;
+import repository.domain.Role;
+import util.jdbcconnector.JdbcConnection;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;

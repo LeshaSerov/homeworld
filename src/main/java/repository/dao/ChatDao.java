@@ -1,9 +1,7 @@
-package business;
+package repository.dao;
 
-import domain.Group;
-import domain.Member;
-import domain.Warning;
-import jdbcconnector.JdbcConnection;
+import repository.domain.Member;
+import util.jdbcconnector.JdbcConnection;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -13,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import static business.MemberDao.getMemberExtendedFromResultSet;
+import static repository.dao.MemberDao.getMemberExtendedFromResultSet;
 
 public class ChatDao {
     private static final Logger LOGGER = Logger.getLogger(ChatDao.class);

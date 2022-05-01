@@ -1,4 +1,4 @@
-package domain;
+package repository.domain;
 
 import lombok.Builder;
 import lombok.Getter;

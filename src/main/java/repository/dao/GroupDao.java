@@ -1,20 +1,33 @@
-package business;
+package repository.dao;
 
-import domain.Group;
-import domain.Member;
-import domain.Warning;
-import jdbcconnector.JdbcConnection;
+import repository.domain.Group;
+import repository.domain.Member;
+import repository.domain.Role;
+import repository.domain.Warning;
+import util.jdbcconnector.JdbcConnection;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 
-import static business.MemberDao.getMemberExtendedFromResultSet;
-import static business.MemberDao.getMemberFromResultSet;
-
 public class GroupDao {
     private static final Logger LOGGER = Logger.getLogger(GroupDao.class);
+
+    protected static Role getRoleFromResultSet(ResultSet resultSet) {
+        try {
+            return Role.builder()
+                    .id(resultSet.getInt(1))
+                    .right_ping(resultSet.getBoolean(2))
+                    .right_edit(resultSet.getBoolean(3))
+                    .right_to_view(resultSet.getBoolean(4))
+                    .right_admin(resultSet.getBoolean(5))
+                    .build();
+        } catch (SQLException e) {
+            LOGGER.error("Role creation error");
+        }
+        return null;
+    }
 
     protected static Warning getWarningFromResultSet(ResultSet resultSet) {
         try {
@@ -108,6 +121,22 @@ public class GroupDao {
                 return false;
             }
         }
+    }
+
+    public static ArrayList<Role> getAllRole() throws IOException, SQLException {
+        ArrayList<Role> result = new ArrayList<>();
+        String SQL = """
+                SELECT * FROM roles
+                """;
+        try (Connection connection = new JdbcConnection().CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    result.add(getRoleFromResultSet(resultSet));
+                }
+            }
+        }
+        return result;
     }
 
     public static Boolean addGroup(String title) throws IOException, SQLException {
@@ -326,7 +355,7 @@ public class GroupDao {
             try (ResultSet resultSet = preparedStatement.executeQuery()){
                 while (resultSet.next())
                 {
-                    result.add(getMemberExtendedFromResultSet(resultSet));
+                    result.add(MemberDao.getMemberExtendedFromResultSet(resultSet));
                 }
             }
         }
@@ -348,7 +377,7 @@ public class GroupDao {
             try (ResultSet resultSet = preparedStatement.executeQuery()){
                 while (resultSet.next())
                 {
-                    result.add(getMemberFromResultSet(resultSet));
+                    result.add(MemberDao.getMemberFromResultSet(resultSet));
                 }
             }
         }

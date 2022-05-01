@@ -1,11 +1,11 @@
-import business.GroupDao;
+import repository.dao.GroupDao;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import jdbcconnector.JdbcConnection;
+import util.jdbcconnector.JdbcConnection;
 
 public class JdbsConnectionUtilTest {
     @Test
