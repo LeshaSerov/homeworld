@@ -19,10 +19,11 @@ public class RoleDao {
         try {
             return Role.builder()
                     .id(resultSet.getInt(1))
-                    .right_to_view(resultSet.getBoolean(2))
-                    .right_ping(resultSet.getBoolean(3))
-                    .right_edit(resultSet.getBoolean(4))
-                    .right_admin(resultSet.getBoolean(5))
+                    .title(resultSet.getString(2))
+                    .right_to_view(resultSet.getBoolean(3))
+                    .right_ping(resultSet.getBoolean(4))
+                    .right_edit(resultSet.getBoolean(5))
+                    .right_admin(resultSet.getBoolean(6))
                     .build();
         }
         catch (SQLException e){

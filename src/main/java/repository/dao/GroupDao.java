@@ -18,10 +18,11 @@ public class GroupDao {
         try {
             return Role.builder()
                     .id(resultSet.getInt(1))
-                    .right_ping(resultSet.getBoolean(2))
-                    .right_edit(resultSet.getBoolean(3))
-                    .right_to_view(resultSet.getBoolean(4))
-                    .right_admin(resultSet.getBoolean(5))
+                    .title(resultSet.getString(2))
+                    .right_ping(resultSet.getBoolean(3))
+                    .right_edit(resultSet.getBoolean(4))
+                    .right_to_view(resultSet.getBoolean(5))
+                    .right_admin(resultSet.getBoolean(6))
                     .build();
         } catch (SQLException e) {
             LOGGER.error("Role creation error");
@@ -339,7 +340,7 @@ public class GroupDao {
         ArrayList<Member> result = new ArrayList<>();
         String SQL = """
                 SELECT members.id, first_name, last_name, user_name,
-                id_role, right_to_view, right_ping, right_edit, right_admin,
+                id_role, title, right_to_view, right_ping, right_edit, right_admin,
                     (select count(id)
                     from warnings
                     where members.id = warnings.id_member

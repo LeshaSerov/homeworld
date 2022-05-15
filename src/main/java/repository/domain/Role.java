@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 public class Role {
     Integer id;
+    String title;
     Boolean right_to_view;
     Boolean right_ping;
     Boolean right_edit;

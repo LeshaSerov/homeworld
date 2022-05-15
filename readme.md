@@ -66,7 +66,8 @@ https://dbdiagram.io/d/62696c4995e7f23c6184fe24
         title charvarying(150) [NOT NULL]
 
     Роль
-        id integer [pk, increment] 
+        id integer [pk, increment]
+        title charvarying(150) [NOT NULL]
         right_ping boolean [NOT NULL]
         right_edit boolean [NOT NULL]
         right_to_view boolean [NOT NULL]

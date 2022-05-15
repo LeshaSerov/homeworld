@@ -40,12 +40,13 @@ public class MemberDao {
                     .user_name(resultSet.getString(4))
                     .role(Role.builder()
                             .id(resultSet.getInt(5))
-                            .right_to_view(resultSet.getBoolean(6))
-                            .right_ping(resultSet.getBoolean(7))
-                            .right_edit(resultSet.getBoolean(8))
-                            .right_admin(resultSet.getBoolean(9))
+                            .title(resultSet.getString(6))
+                            .right_to_view(resultSet.getBoolean(7))
+                            .right_ping(resultSet.getBoolean(8))
+                            .right_edit(resultSet.getBoolean(9))
+                            .right_admin(resultSet.getBoolean(10))
                             .build())
-                    .number_of_warning(resultSet.getInt(10))
+                    .number_of_warning(resultSet.getInt(11))
                     .build();
         }
         catch (SQLException e){
