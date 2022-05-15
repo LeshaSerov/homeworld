@@ -60,7 +60,7 @@ public class GroupDao {
 
     public static Boolean addMember(Integer id_member, Integer id_group) throws IOException, SQLException {
         String SQL = """
-                INSERT INTO members_in_groups (id_group, id_member, id_role) VALUES (?, ?, ?);
+                INSERT INTO members_in_groups (id_group, id_member, id_role) VALUES (?, ?, ?)  ON CONFLICT (id_group, id_member) DO NOTHING;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -171,8 +171,8 @@ public class GroupDao {
     }
 
     public static Boolean deleteGroup(Integer id_group) throws IOException, SQLException {
-        deleteAllMembers(id_group);
-        deleteAllWarningsInGroup(id_group);
+        //deleteAllMembers(id_group);
+        //deleteAllWarningsInGroup(id_group);
         //*удалить все файлы
         //*удалить все категории
 
@@ -284,9 +284,9 @@ public class GroupDao {
     public static Boolean stopWarning(Integer id_group, Integer id_member) throws IOException, SQLException {
         String SQL = """
                 UPDATE warnings SET date = null
-                WHERE id_group = ? and id_member = ? and id = 
-                    (select MAX(id) 
-                    from warnings 
+                WHERE id_group = ? and id_member = ? and id =
+                    (select MAX(id)
+                    from warnings
                     where id_group = ? and id_member = ?);
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();

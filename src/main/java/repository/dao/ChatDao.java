@@ -18,7 +18,7 @@ public class ChatDao {
 
     public static Boolean addMember(Integer id_member, Integer id_chat) throws IOException, SQLException {
         String SQL = """
-                INSERT INTO members_in_chats (id_chat, id_member) VALUES (?, ?);
+                INSERT INTO members_in_chats (id_chat, id_member) VALUES (?, ?) ON CONFLICT (id_chat, id_member) DO NOTHING;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -65,7 +65,7 @@ public class ChatDao {
 
     public static Boolean addChat(String title) throws IOException, SQLException {
         String SQL = """
-                INSERT INTO chats (title. ping) VALUES (?);
+                INSERT INTO chats (id, title) VALUES (?, ?) ON CONFLICT (id) DO NOTHING;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {

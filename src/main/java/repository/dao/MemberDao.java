@@ -56,7 +56,7 @@ public class MemberDao {
 
     public static Boolean addMember(Integer id, String first_name, String last_name, String user_name) throws IOException, SQLException {
         String SQL = """
-                INSERT INTO members (id, first_name, last_name, user_name) VALUES (?, ?, ?, ?);
+                INSERT INTO members (id, first_name, last_name, user_name) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
