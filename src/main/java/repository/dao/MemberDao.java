@@ -66,8 +66,7 @@ public class MemberDao {
             preparedStatement.setString(3, last_name);
             preparedStatement.setString(4, user_name);
             try {
-                Integer result = preparedStatement.executeUpdate();
-                return true;
+                return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
                 return false;
             }
@@ -84,6 +83,21 @@ public class MemberDao {
             preparedStatement.setString(1, first_name);
             preparedStatement.setString(2, last_name);
             preparedStatement.setString(3, user_name);
+            try {
+                return preparedStatement.executeUpdate() != 0;
+            } catch (SQLException e) {
+                return false;
+            }
+        }
+    }
+
+    public static Boolean deleteMember(Integer id) throws IOException, SQLException {
+        String SQL = """
+                DELETE FROM members WHERE id = ?;
+                """;
+        try (Connection connection = new JdbcConnection().CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1, id);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
