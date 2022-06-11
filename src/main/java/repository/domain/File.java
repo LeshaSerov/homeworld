@@ -3,16 +3,18 @@ package repository.domain;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 @Builder
 @Getter
 @Setter
+@ToString
 public class File {
-    Integer id;
-    Integer id_group;
-    Integer id_category;
-    String title;
-    Date data_create;
+    private Integer id;
+    private Integer id_group;
+    private Integer id_category;
+    private String title;
+    private Timestamp data_create;
 }

@@ -12,9 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class MemberDao {
-    private static final Logger LOGGER = Logger.getLogger(MemberDao.class);
+    private final Logger LOGGER = Logger.getLogger(MemberDao.class);
 
-    protected static Member getMemberFromResultSet(ResultSet resultSet)
+    protected Member getMemberFromResultSet(ResultSet resultSet)
     {
         try {
             return Member.builder()
@@ -30,7 +30,7 @@ public class MemberDao {
         return null;
     }
 
-    protected static Member getMemberExtendedFromResultSet(ResultSet resultSet)
+    protected Member getMemberExtendedFromResultSet(ResultSet resultSet)
     {
         try {
             return Member.builder()
@@ -55,11 +55,11 @@ public class MemberDao {
         return null;
     }
 
-    public static Boolean addMember(Integer id, String first_name, String last_name, String user_name) throws IOException, SQLException {
+    public Boolean addMember(Integer id, String first_name, String last_name, String user_name, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 INSERT INTO members (id, first_name, last_name, user_name) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id);
             preparedStatement.setString(2, first_name);
@@ -73,11 +73,11 @@ public class MemberDao {
         }
     }
 
-    public static Boolean editMember(Integer id, String first_name, String last_name, String user_name) throws IOException, SQLException {
+    public Boolean editMember(Integer id, String first_name, String last_name, String user_name, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 UPDATE members SET first_name = ?, last_name = ?, user_name = ? WHERE id = ?;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(4, id);
             preparedStatement.setString(1, first_name);
@@ -91,11 +91,11 @@ public class MemberDao {
         }
     }
 
-    public static Boolean deleteMember(Integer id) throws IOException, SQLException {
+    public Boolean deleteMember(Integer id, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM members WHERE id = ?;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id);
             try {

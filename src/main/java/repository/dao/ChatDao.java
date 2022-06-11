@@ -11,16 +11,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import static repository.dao.MemberDao.getMemberFromResultSet;
-
 public class ChatDao {
-    private static final Logger LOGGER = Logger.getLogger(ChatDao.class);
+    private final Logger LOGGER = Logger.getLogger(ChatDao.class);
 
-    public static Boolean addMember(Integer id_member, Integer id_chat) throws IOException, SQLException {
+    public Boolean addMember(Integer id_member, Integer id_chat, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 INSERT INTO members_in_chat (id_chat, id_member) VALUES (?, ?) ON CONFLICT (id_chat, id_member) DO NOTHING;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_chat);
             preparedStatement.setInt(2, id_member);
@@ -32,11 +30,11 @@ public class ChatDao {
         }
     }
 
-    public static Boolean deleteMember(Integer id_member, Integer id_chat) throws IOException, SQLException {
+    public Boolean deleteMember(Integer id_member, Integer id_chat, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM members_in_chat WHERE id_chat = ? and id_member = ?;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_chat);
             preparedStatement.setInt(2, id_member);
@@ -48,11 +46,11 @@ public class ChatDao {
         }
     }
 
-    public static Boolean deleteAllMembers(Integer id_chat) throws IOException, SQLException {
+    public Boolean deleteAllMembers(Integer id_chat, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM members_in_chat WHERE id_chat = ?;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_chat);
             try {
@@ -63,11 +61,11 @@ public class ChatDao {
         }
     }
 
-    public static Boolean addChat(Integer id, String title) throws IOException, SQLException {
+    public Boolean addChat(Integer id, String title, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 INSERT INTO chats (id, title) VALUES (?, ?) ON CONFLICT (id) DO NOTHING;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id);
             preparedStatement.setString(2, title);
@@ -80,11 +78,11 @@ public class ChatDao {
 
     }
 
-    public static Boolean editChat(Integer id_chat, String title, Boolean ping) throws IOException, SQLException {
+    public Boolean editChat(Integer id_chat, String title, Boolean ping, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 UPDATE chats SET title = ?, ping = ? WHERE id = ?;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setString(1, title);
             preparedStatement.setBoolean(2, ping);
@@ -97,11 +95,11 @@ public class ChatDao {
         }
     }
 
-    public static Boolean deleteChat(Integer id_chat) throws IOException, SQLException {
+    public Boolean deleteChat(Integer id_chat, JdbcConnection jdbcConnection) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM chats WHERE id = ?;
                 """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_chat);
             try {
@@ -112,7 +110,7 @@ public class ChatDao {
         }
     }
 
-    public static ArrayList<Member> getAllMemberInChat(Integer id_chat) throws IOException, SQLException {
+    public ArrayList<Member> getAllMemberInChat(Integer id_chat, JdbcConnection jdbcConnection) throws IOException, SQLException {
         ArrayList<Member> result = new ArrayList<>();
         String SQL = """
                 SELECT members.id, first_name, last_name, user_name
@@ -121,13 +119,13 @@ public class ChatDao {
                 and id_chat=?
                 """;
 
-        try (Connection connection = new JdbcConnection().CreateConnect();
+        try (Connection connection = jdbcConnection.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
             preparedStatement.setInt(1, id_chat);
             try (ResultSet resultSet = preparedStatement.executeQuery()){
                 while (resultSet.next())
                 {
-                    result.add(getMemberFromResultSet(resultSet));
+                    result.add(new MemberDao().getMemberFromResultSet(resultSet));
                 }
             }
         }

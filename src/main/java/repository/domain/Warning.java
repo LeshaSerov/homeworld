@@ -3,18 +3,20 @@ package repository.domain;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import java.sql.Date;
+import lombok.ToString;
+
 import java.sql.Timestamp;
 
 @Builder
 @Getter
 @Setter
+@ToString
 public class Warning {
-    Integer id;
-    Integer id_group;
-    Integer id_member;
-    Integer id_cautioning;
-    String cause;
-    Timestamp date;
-    Integer deadline;
+    private Integer id;
+    private Integer id_group;
+    private Integer id_member;
+    private Integer id_cautioning;
+    private String cause;
+    private Timestamp date;
+    private Integer deadline;
 }
