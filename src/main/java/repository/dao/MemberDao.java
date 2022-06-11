@@ -75,7 +75,7 @@ public class MemberDao {
 
     public static Boolean editMember(Integer id, String first_name, String last_name, String user_name) throws IOException, SQLException {
         String SQL = """
-                UPDATE members SET first_name = ? AND last_name = ? AND user_name = ? WHERE id = ?;
+                UPDATE members SET first_name = ?, last_name = ?, user_name = ? WHERE id = ?;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -105,5 +105,10 @@ public class MemberDao {
             }
         }
     }
+
+    //Метод просмотр в каких группах есть этот пользователь
+
+
+
 
 }

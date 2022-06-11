@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import java.sql.Date;
+import java.sql.Timestamp;
 
 @Builder
 @Getter
@@ -14,6 +15,6 @@ public class Warning {
     Integer id_member;
     Integer id_cautioning;
     String cause;
-    Date date;
+    Timestamp date;
     Integer deadline;
 }

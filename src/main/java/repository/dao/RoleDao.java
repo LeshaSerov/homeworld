@@ -47,4 +47,39 @@ public class RoleDao {
         return result;
     }
 
+    public static Integer addRole(String title, Boolean right_ping, Boolean right_edit, Boolean right_to_view, Boolean right_admin) throws IOException, SQLException {
+        String SQL = """
+                INSERT INTO roles (title, right_ping, right_edit, right_to_view, right_admin) VALUES (?, ?, ?, ?, ?) RETURNING id;
+                """;
+        try (Connection connection = new JdbcConnection().CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setString(1, title);
+            preparedStatement.setBoolean(2, right_ping);
+            preparedStatement.setBoolean(3, right_edit);
+            preparedStatement.setBoolean(4, right_to_view);
+            preparedStatement.setBoolean(5, right_admin);
+            try (ResultSet resultSet = preparedStatement.executeQuery();){
+                resultSet.next();
+                return resultSet.getInt(1);
+            } catch (SQLException e) {
+                return -1;
+            }
+        }
+    }
+
+    public static Boolean deleteRole(Integer id) throws IOException, SQLException {
+        String SQL = """
+                DELETE FROM roles WHERE id = ?;
+                """;
+        try (Connection connection = new JdbcConnection().CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1, id);
+            try {
+                return preparedStatement.executeUpdate() != 0;
+            } catch (SQLException e) {
+                return false;
+            }
+        }
+    }
+
 }

@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class GroupDao {
     private static final Logger LOGGER = Logger.getLogger(GroupDao.class);
@@ -38,7 +39,7 @@ public class GroupDao {
                     .id_member(resultSet.getInt(3))
                     .id_cautioning(resultSet.getInt(4))
                     .cause(resultSet.getString(5))
-                    .date(resultSet.getDate(6))
+                    .date(resultSet.getTimestamp(6))
                     .deadline(resultSet.getInt(7))
                     .build();
         } catch (SQLException e) {
@@ -59,15 +60,15 @@ public class GroupDao {
         return null;
     }
 
-    public static Boolean addMember(Integer id_member, Integer id_group) throws IOException, SQLException {
+    public static Boolean addMember(Integer id_member, Integer id_group, Integer id_role) throws IOException, SQLException {
         String SQL = """
-                INSERT INTO members_in_groups (id_group, id_member, id_role) VALUES (?, ?, ?)  ON CONFLICT (id_group, id_member) DO NOTHING;
+                INSERT INTO members_in_group (id_group, id_member, id_role) VALUES (?, ?, ?)  ON CONFLICT (id_group, id_member) DO NOTHING;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
             preparedStatement.setInt(2, id_member);
-            preparedStatement.setInt(3, 1);
+            preparedStatement.setInt(3, id_role);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -78,7 +79,7 @@ public class GroupDao {
 
     public static Boolean editMember(Integer id_member, Integer id_group, Integer id_role) throws IOException, SQLException {
         String SQL = """
-                UPDATE members_in_groups SET id_role = ? WHERE id_member = ? and id_group = ?;
+                UPDATE members_in_group SET id_role = ? WHERE id_member = ? and id_group = ?;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -95,7 +96,7 @@ public class GroupDao {
 
     public static Boolean deleteMember(Integer id_member, Integer id_group) throws IOException, SQLException {
         String SQL = """
-                DELETE FROM members_in_groups WHERE id_group = ? and id_member = ?;
+                DELETE FROM members_in_group WHERE id_group = ? and id_member = ?;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -140,17 +141,18 @@ public class GroupDao {
         return result;
     }
 
-    public static Boolean addGroup(String title) throws IOException, SQLException {
+    public static Integer addGroup(String title) throws IOException, SQLException {
         String SQL = """
-                INSERT INTO groups (title) VALUES (?);
+                INSERT INTO groups (title) VALUES (?) RETURNING id;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setString(1, title);
-            try {
-                return preparedStatement.executeUpdate() != 0;
+            try (ResultSet resultSet = preparedStatement.executeQuery();){
+                resultSet.next();
+                return resultSet.getInt(1);
             } catch (SQLException e) {
-                return false;
+                return -1;
             }
         }
     }
@@ -172,13 +174,8 @@ public class GroupDao {
     }
 
     public static Boolean deleteGroup(Integer id_group) throws IOException, SQLException {
-        //deleteAllMembers(id_group);
-        //deleteAllWarningsInGroup(id_group);
-        //*удалить все файлы
-        //*удалить все категории
-
         String SQL = """
-                DELETE FROM groups WHERE id_group = ?;
+                DELETE FROM groups WHERE id = ?;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -192,29 +189,38 @@ public class GroupDao {
     }
 
     public static Boolean addWarning(Integer id_member, Integer id_group, Integer id_cautioning, String cause, Integer deadline) throws IOException, SQLException {
-        String SQL = """
-                INSERT INTO warnings (id_group, id_member, id_cautioning, cause, date, deadline) VALUES (?, ?, ?, ?, ?, ?);
-                """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
-             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id_group);
-            preparedStatement.setInt(2, id_member);
-            preparedStatement.setInt(3, id_cautioning);
-            preparedStatement.setString(4, cause);
-            preparedStatement.setDate(5, new Date(System.currentTimeMillis()));
-            preparedStatement.setInt(6, deadline);
-            try {
-                return stopWarning(id_group, id_member) && preparedStatement.executeUpdate() != 0;
-            } catch (SQLException e) {
-                startWarning(id_group, id_member);
-                return false;
+        ArrayList<Member> members = GroupDao.getAllMemberInGroup(id_group);
+        if (members.stream().anyMatch(a -> Objects.equals(a.getId(), id_member))) {
+            String SQL = """
+                    INSERT INTO warnings (id_group, id_member, id_cautioning, cause, date, deadline) VALUES (?, ?, ?, ?, ?, ?);
+                    """;
+            try (Connection connection = new JdbcConnection().CreateConnect();
+                 PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+                preparedStatement.setInt(1, id_group);
+                preparedStatement.setInt(2, id_member);
+                preparedStatement.setInt(3, id_cautioning);
+                preparedStatement.setString(4, cause);
+                preparedStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
+                preparedStatement.setInt(6, deadline);
+                try {
+                    Integer numbersWarnings = GroupDao.getCountWarningsFromMemberInGroup(id_member, id_group);
+                    if (numbersWarnings == 0)
+                        return (preparedStatement.executeUpdate() != 0);
+                    else if (numbersWarnings > 0)
+                        return stopWarning(id_group, id_member) && (preparedStatement.executeUpdate() != 0);
+                    else return false;
+                } catch (SQLException e) {
+                    startWarning(id_group, id_member);
+                    return false;
+                }
             }
         }
+        else return false;
     }
 
     public static Boolean deleteWarning(Integer id_group, Integer id_member) throws IOException, SQLException {
         String SQL = """
-                DELETE FROM warnings WHERE id_group = ? and id_member = ? and Date != null;
+                DELETE FROM warnings WHERE id_group = ? and id_member = ? and Date is not null;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -228,7 +234,7 @@ public class GroupDao {
         }
     }
 
-    public static Boolean deleteAllWarning(Integer id_group, Integer id_member) throws IOException, SQLException {
+    public static Boolean deleteAllWarnings(Integer id_group, Integer id_member) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM warnings WHERE id_group = ? and id_member = ?;
                 """;
@@ -245,35 +251,34 @@ public class GroupDao {
     }
 
     public static Boolean deleteAllWarningsInGroup(Integer id_group) throws IOException, SQLException {
-        String SQL = """
-                DELETE FROM warnings WHERE id_group = ?;
-                """;
-        try (Connection connection = new JdbcConnection().CreateConnect();
-             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id_group);
-            try {
-                return preparedStatement.executeUpdate() != 0;
-            } catch (SQLException e) {
-                return false;
+        try {
+            ArrayList<Warning> result = getAllWarnings();
+            for (Warning object : result) {
+                if (Objects.equals(object.getId_group(), id_group)) {
+                    GroupDao.deleteAllWarnings(id_group, object.getId_member());
+                }
             }
+            return true;
+        }
+        catch (Exception exception)
+        {
+            return false;
         }
     }
 
     public static Boolean startWarning(Integer id_group, Integer id_member) throws IOException, SQLException {
         String SQL = """
                 UPDATE warnings SET date = ?
-                WHERE id_group = ? and id_member = ? and id =
+                WHERE id =
                     (select MAX(id)
                     from warnings
                     where id_group = ? and id_member = ?);
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setDate(1, new Date(System.currentTimeMillis()));
+            preparedStatement.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             preparedStatement.setInt(2, id_group);
             preparedStatement.setInt(3, id_member);
-            preparedStatement.setInt(4, id_group);
-            preparedStatement.setInt(5, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -285,7 +290,7 @@ public class GroupDao {
     public static Boolean stopWarning(Integer id_group, Integer id_member) throws IOException, SQLException {
         String SQL = """
                 UPDATE warnings SET date = null
-                WHERE id_group = ? and id_member = ? and id =
+                WHERE id =
                     (select MAX(id)
                     from warnings
                     where id_group = ? and id_member = ?);
@@ -294,8 +299,6 @@ public class GroupDao {
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
             preparedStatement.setInt(2, id_member);
-            preparedStatement.setInt(3, id_group);
-            preparedStatement.setInt(4, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -320,12 +323,31 @@ public class GroupDao {
         return result;
     }
 
+    public static Integer getCountWarningsFromMemberInGroup(Integer id_member, Integer id_group) throws IOException, SQLException {
+        String SQL = """
+                SELECT COUNT(id) FROM warnings WHERE id_member = ? and id_group = ?
+                """;
+        try (Connection connection = new JdbcConnection().CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1, id_member);
+            preparedStatement.setInt(2, id_group);
+            try (ResultSet resultSet = preparedStatement.executeQuery();){
+                resultSet.next();
+                Integer count = resultSet.getInt(1);
+                return count;
+            } catch (SQLException e) {
+                return -1;
+            }
+        }
+    }
+
     public static boolean CheckWarning() {
         try {
             ArrayList<Warning> result = getAllWarnings();
             for (Warning object : result) {
                 if (object.getDate() != null) {
-                    if (object.getDate().before(new Date(System.currentTimeMillis() + object.getDeadline() * 86400000))) {
+                    Timestamp deadline = new Timestamp(System.currentTimeMillis() + object.getDeadline() * 86400000);
+                    if (object.getDate().after(deadline)) {
                         deleteWarning(object.getId_group(), object.getId_member());
                     }
                 }
@@ -353,6 +375,7 @@ public class GroupDao {
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
             preparedStatement.setInt(1, id_group);
+            preparedStatement.setInt(2, id_group);
             try (ResultSet resultSet = preparedStatement.executeQuery()){
                 while (resultSet.next())
                 {

@@ -43,14 +43,14 @@ public class FileInGroupDao {
 
     public static Boolean addFile(Integer id, Integer id_category, String title) throws IOException, SQLException {
         String SQL = """
-                INSERT INTO files (id, id_category, title, data_create) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
+                INSERT INTO files (id, id_category, title, data_create) VALUES (?, ?, ?, ?) ON CONFLICT (id, id_category) DO NOTHING;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id);
             preparedStatement.setInt(2, id_category);
             preparedStatement.setString(3, title);
-            preparedStatement.setDate(4, new Date(System.currentTimeMillis()));
+            preparedStatement.setTimestamp(4,  new Timestamp(System.currentTimeMillis()));
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -61,7 +61,7 @@ public class FileInGroupDao {
 
     public static Boolean editFile(Integer id, Integer id_category, String title) throws IOException, SQLException {
         String SQL = """
-                UPDATE files SET id_category = ? and title = ? WHERE id = ?;
+                UPDATE files SET id_category = ?, title = ? WHERE id = ?;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -93,7 +93,7 @@ public class FileInGroupDao {
 
     public static Boolean deleteAllFiles(Integer id_category) throws IOException, SQLException {
         String SQL = """
-                DELETE files WHERE id_category = ?;
+                DELETE FROM files WHERE id_category = ?;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -106,19 +106,19 @@ public class FileInGroupDao {
         }
     }
 
-    public static Boolean addCategory(Integer id, Integer id_group, String title) throws IOException, SQLException {
+    public static Integer addCategory(Integer id_group, String title) throws IOException, SQLException {
         String SQL = """
-                INSERT INTO categories (id, id_group, title) VALUES (?, ?, ?);
+                INSERT INTO categories (id_group, title) VALUES (?, ?) RETURNING id;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id);
-            preparedStatement.setInt(2, id_group);
-            preparedStatement.setString(3, title);
-            try {
-                return preparedStatement.executeUpdate() != 0;
+            preparedStatement.setInt(1, id_group);
+            preparedStatement.setString(2, title);
+            try (ResultSet resultSet = preparedStatement.executeQuery();){
+                resultSet.next();
+                return resultSet.getInt(1);
             } catch (SQLException e) {
-                return false;
+                return -1;
             }
         }
     }
@@ -129,8 +129,8 @@ public class FileInGroupDao {
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(3, id);
-            preparedStatement.setString(2, title);
+            preparedStatement.setInt(2, id);
+            preparedStatement.setString(1, title);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -156,7 +156,7 @@ public class FileInGroupDao {
 
     public static Boolean deleteAllCategories(Integer id_group) throws IOException, SQLException {
         String SQL = """
-                DELETE files WHERE id_group = ?;
+                DELETE FROM categories WHERE id_group = ?;
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -172,10 +172,11 @@ public class FileInGroupDao {
     public static ArrayList<Category> getAllCategories(Integer id_group) throws IOException, SQLException {
         ArrayList<Category> result = new ArrayList<>();
         String SQL = """
-                SELECT * FROM category WHERE id_group = ?
+                SELECT * FROM categories WHERE id_group = ?
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1,id_group);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     result.add(getCategoryFromResultSet(resultSet));
@@ -188,10 +189,11 @@ public class FileInGroupDao {
     public static ArrayList<File> getAllFiles(Integer id_group) throws IOException, SQLException {
         ArrayList<File> result = new ArrayList<>();
         String SQL = """
-                SELECT files.id, files.id_category, files.title, files.data_create FROM files, category WHERE categories.id_group=group.id and group.id = ?
+                SELECT files.id, files.id_category, files.title, files.data_create FROM files, categories, groups WHERE categories.id_group=groups.id and groups.id = ?
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1,id_group);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     result.add(getFileFromResultSet(resultSet));
@@ -208,6 +210,7 @@ public class FileInGroupDao {
                 """;
         try (Connection connection = new JdbcConnection().CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1,id_category);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     result.add(getFileFromResultSet(resultSet));

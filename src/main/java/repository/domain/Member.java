@@ -14,8 +14,4 @@ public class Member {
     String user_name;
     Integer number_of_warning;
     Role role = null;
-
-    public Boolean isEmptyRole(){
-        return role == null;
-    }
 }
