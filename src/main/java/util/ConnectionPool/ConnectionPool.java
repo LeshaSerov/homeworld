@@ -1,4 +1,4 @@
-package util.jdbcconnector;
+package util.ConnectionPool;
 
 import util.configuration.PropertyReader;
 
@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class JdbcConnection {
+public class ConnectionPool {
 
     public Connection CreateConnect() throws IOException, SQLException {
         PropertyReader propertyReader = new PropertyReader();

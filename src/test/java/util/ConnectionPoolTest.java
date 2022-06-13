@@ -1,18 +1,17 @@
 package util;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import util.jdbcconnector.JdbcConnection;
+import util.ConnectionPool.ConnectionPool;
 
-public class JdbcConnectionTest {
+public class ConnectionPoolTest {
 
     @Test
     public void CreateConnectTest() throws SQLException, IOException {
-            Connection connection = new JdbcConnection().CreateConnect();
+            Connection connection = new ConnectionPool().CreateConnect();
     }
 }
