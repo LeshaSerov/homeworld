@@ -4,7 +4,7 @@ import util.ConnectionPool.ConnectionPool;
 
 class Starter {
     public static void main(String[] args) {
-        new Bot(new ConnectionPool()).serve();
+        new Bot().serve();
         System.out.println("Bot started");
     }
 }
