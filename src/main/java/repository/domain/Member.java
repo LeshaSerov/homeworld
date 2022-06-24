@@ -10,7 +10,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class Member {
-    private Integer id;
+    private Long id;
     private String first_name;
     private String last_name;
     private String user_name;

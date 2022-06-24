@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 public class Warning {
     private Integer id;
     private Integer id_group;
-    private Integer id_member;
+    private Long id_member;
     private Integer id_cautioning;
     private String cause;
     private Timestamp date;

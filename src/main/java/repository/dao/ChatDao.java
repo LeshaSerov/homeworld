@@ -2,7 +2,7 @@ package repository.dao;
 
 import repository.domain.Member;
 import util.ConnectionPool.ConnectionPool;
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -12,16 +12,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class ChatDao {
-    private final Logger LOGGER = Logger.getLogger(ChatDao.class);
+    //private final Logger LOGGER = Logger.getLogger(ChatDao.class);
 
-    public Boolean addMember(Integer id_member, Integer id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addMember(Long id_member, Long id_chat, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 INSERT INTO members_in_chat (id_chat, id_member) VALUES (?, ?) ON CONFLICT (id_chat, id_member) DO NOTHING;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id_chat);
-            preparedStatement.setInt(2, id_member);
+            preparedStatement.setLong(1, id_chat);
+            preparedStatement.setLong(2, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -30,14 +30,14 @@ public class ChatDao {
         }
     }
 
-    public Boolean deleteMember(Integer id_member, Integer id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteMember(Long id_member, Long id_chat, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM members_in_chat WHERE id_chat = ? and id_member = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id_chat);
-            preparedStatement.setInt(2, id_member);
+            preparedStatement.setLong(1, id_chat);
+            preparedStatement.setLong(2, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -46,13 +46,13 @@ public class ChatDao {
         }
     }
 
-    public Boolean deleteAllMembers(Integer id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteAllMembers(Long id_chat, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM members_in_chat WHERE id_chat = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id_chat);
+            preparedStatement.setLong(1, id_chat);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -61,13 +61,13 @@ public class ChatDao {
         }
     }
 
-    public Boolean addChat(Integer id, String title, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addChat(Long id, String title, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 INSERT INTO chats (id, title) VALUES (?, ?) ON CONFLICT (id) DO NOTHING;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id);
+            preparedStatement.setLong(1, id);
             preparedStatement.setString(2, title);
             try {
                 return preparedStatement.executeUpdate() != 0;
@@ -78,7 +78,7 @@ public class ChatDao {
 
     }
 
-    public Boolean editChat(Integer id_chat, String title, Boolean ping, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editChat(Long id_chat, String title, Boolean ping, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 UPDATE chats SET title = ?, ping = ? WHERE id = ?;
                 """;
@@ -86,7 +86,7 @@ public class ChatDao {
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setString(1, title);
             preparedStatement.setBoolean(2, ping);
-            preparedStatement.setInt(3, id_chat);
+            preparedStatement.setLong(3, id_chat);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -95,13 +95,13 @@ public class ChatDao {
         }
     }
 
-    public Boolean deleteChat(Integer id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteChat(Long id_chat, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM chats WHERE id = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id_chat);
+            preparedStatement.setLong(1, id_chat);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -110,7 +110,7 @@ public class ChatDao {
         }
     }
 
-    public ArrayList<Member> getAllMemberInChat(Integer id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<Member> getAllMemberInChat(Long id_chat, ConnectionPool connector) throws IOException, SQLException {
         ArrayList<Member> result = new ArrayList<>();
         String SQL = """
                 SELECT members.id, first_name, last_name, user_name
@@ -121,7 +121,7 @@ public class ChatDao {
 
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
-            preparedStatement.setInt(1, id_chat);
+            preparedStatement.setLong(1, id_chat);
             try (ResultSet resultSet = preparedStatement.executeQuery()){
                 while (resultSet.next())
                 {

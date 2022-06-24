@@ -16,8 +16,8 @@ public class MemberDaoTest {
     public void memberTest() throws SQLException, IOException {
         ConnectionPool connector = new ConnectionPool();
 
-        Integer id_member = 1;
-        Integer id_member2 = 2;
+        Long id_member = 1L;
+        Long id_member2 = 2L;
 
         new MemberDao().deleteMember(id_member, connector);
         new MemberDao().deleteMember(id_member2, connector);

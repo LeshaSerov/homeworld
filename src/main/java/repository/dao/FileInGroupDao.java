@@ -1,6 +1,6 @@
 package repository.dao;
 
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 import repository.domain.Category;
 import repository.domain.File;
 import util.ConnectionPool.ConnectionPool;
@@ -10,7 +10,7 @@ import java.sql.*;
 import java.util.ArrayList;
 
 public class FileInGroupDao {
-    private final Logger LOGGER = Logger.getLogger(FileInGroupDao.class);
+    //private final Logger LOGGER = Logger.getLogger(FileInGroupDao.class);
 
     protected File getFileFromResultSet(ResultSet resultSet) {
         try {
@@ -21,7 +21,7 @@ public class FileInGroupDao {
                     .data_create(resultSet.getTimestamp(4))
                     .build();
         } catch (SQLException e) {
-            LOGGER.error("Role creation error");
+            //LOGGER.error("Role creation error");
         }
         return null;
     }
@@ -34,7 +34,7 @@ public class FileInGroupDao {
                     .title(resultSet.getString(3))
                     .build();
         } catch (SQLException e) {
-            LOGGER.error("Warning creation error");
+            //LOGGER.error("Warning creation error");
         }
         return null;
     }

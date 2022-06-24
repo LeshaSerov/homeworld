@@ -10,7 +10,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class Chat {
-    private Integer id;
+    private Long id;
     private String title;
     private Boolean ping;
 }

@@ -2,7 +2,7 @@ package repository.dao;
 
 import repository.domain.Role;
 import util.ConnectionPool.ConnectionPool;
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class RoleDao {
-    private final Logger LOGGER = Logger.getLogger(RoleDao.class);
+//    private final Logger LOGGER = Logger.getLogger(RoleDao.class);
 
     protected Role getRoleFromResultSet(ResultSet resultSet) {
         try {
@@ -26,7 +26,7 @@ public class RoleDao {
                     .build();
         }
         catch (SQLException e){
-            LOGGER.error("Role creation error");
+//            LOGGER.error("Role creation error");
         }
         return null;
     }

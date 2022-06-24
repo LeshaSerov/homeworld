@@ -2,72 +2,91 @@ package telegram;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.CallbackQuery;
+import com.pengrad.telegrambot.model.ChatMemberUpdated;
+import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.request.BaseRequest;
+import com.pengrad.telegrambot.request.DeleteMessage;
 import telegram.domain.MemberVault;
 import telegram.domain.State;
+import telegram.handlers.HandlerEvent;
+import telegram.handlers.HandlerGroupMessages;
+import telegram.handlers.mechanicsStates.HandlerState;
 import util.ConnectionPool.ConnectionPool;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Bot {
     private final TelegramBot bot = new TelegramBot("5417780715:AAFRy0huha6DSO0VNWVJF7ThjN6kpzZ6iWk");
     private final ConnectionPool connector = new ConnectionPool();
-    private final Map<Integer, MemberVault> controllerStates = new HashMap<>();
-    private final State stateDefault = new State(null, null, null);
+    private final Map<Long, MemberVault> controllerStates = new HashMap<Long, MemberVault>();
+    private final State stateDefault = new Initiator().initializeDefaultState();
 
-    private void initial(){
-        State local = stateDefault;
-        local.addPath(new State("AddGroup", "Добавить Группу", stateDefault));
-        local.addPath(new State("ListGroup", "Список Групп", stateDefault));
-
-        local.next("AddGroup").setHandlerRun("AddGroup");
-
-        local = local.next("ListGroup");
-        local.addButtonGenerating("ListGroup", new State("Group", null, local));
-
-        local = local.next("Group");
-
-        local.addPath(new State("FileSystem", "", local));
-        local.addPath(new State("AddMembers", "", local));
-        local.addPath(new State("ListMembersGroup", "", local));
-
-        local = local.next("ListMembersGroup");
-        local.addButtonGenerating("ListMembersGroup", new State("Member", null, local));
-
-        local = local.next("Member");
-        local.addPath(new State("DeleteMember", "", local.previous())); //вертать к списку
-        local.addPath(new State("ListRoles", "", local)); //
-
-        local.next("DeleteMember").setHandlerRun("DeleteMEmber");
-
-        local = local.next("ListRoles");
-        local.addButtonGenerating("ListRoles", new State("ChangeRole", null, local));
-        local.next("ChangeRole").setHandlerRun("ChangeRole");
-
-        local = local.previous().previous();
-
-
-    }
-
-    public void serve() {
-        initial();
-        System.out.println();
+    public void start() {
+        new Initiator().initializeDatabase(connector);
         bot.setUpdatesListener(updates -> {
             updates.forEach(this::process);
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
     }
 
-
     private void process(Update update) {
-//        Проверка Типа Апдейта
-//        Проверка в чате или в личке с ботом
-//        Обработка Апдейтов - состояние пользователя
-//        1 есть handlerRun
-//
+        try {
+            System.out.println("Received Update");
+
+            BaseRequest request = null;
+
+            Boolean inHandlers = false;
+
+            Message message = update.message();
+            CallbackQuery callbackQuery = update.callbackQuery();
+            ChatMemberUpdated myChatMember = update.myChatMember();
+
+            Long id_member = null;
+
+            if (message != null) {
+                id_member = message.from().id();
+
+                if (!new HandlerState().checkBotChat(message)) {
+                    request = new HandlerGroupMessages().processing(message, connector);
+                    id_member = null;
+                }
+                else if (message.text().startsWith("/default")) {
+                    controllerStates.put(id_member, new MemberVault(stateDefault));
+                }
+                else if (message.text().startsWith("/exit")) {
+                    controllerStates.remove(id_member);
+                }
+            }
+            else if (callbackQuery != null) {
+                id_member = callbackQuery.from().id();
+            }
+            else if (myChatMember != null) {
+                request = new HandlerEvent().processing(myChatMember, connector);
+            }
+
+            if (controllerStates.containsKey(id_member)) {
+                request = new HandlerState().processing(controllerStates.get(id_member), message, callbackQuery);
+            }
+            else if(callbackQuery != null)
+                request = new DeleteMessage(callbackQuery.message().chat().id(), callbackQuery.message().messageId());
+
+            if (request != null) {
+                bot.execute(request);
+            }
+
+        } catch (NullPointerException ignored) {
+        }
     }
 
 
+//        Проверка Типа Апдейта
+//        Проверка в чате или в личке с ботом
+//        Обработка Апдейтов - состояние пользователя
+//        1 есть handlerActivator
+//
 
 
 //        try {

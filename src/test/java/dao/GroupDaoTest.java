@@ -33,8 +33,8 @@ public class GroupDaoTest {
         boolean result =new GroupDao().editGroup(id_group, "2", connector);
         Assert.assertTrue(result);
 
-        Integer id_member = 3;
-        Integer id_member2 = 4;
+        Long id_member = 3L;
+        Long id_member2 = 4L;
 
         new MemberDao().deleteMember(id_member, connector);
         new MemberDao().deleteMember(id_member2, connector);

@@ -5,7 +5,7 @@ import repository.domain.Member;
 import repository.domain.Role;
 import repository.domain.Warning;
 import util.ConnectionPool.ConnectionPool;
-import org.apache.log4j.Logger;
+//import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.sql.*;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 public class GroupDao {
-    private final Logger LOGGER = Logger.getLogger(GroupDao.class);
+    //private final Logger LOGGER = Logger.getLogger(GroupDao.class);
 
     protected Role getRoleFromResultSet(ResultSet resultSet) {
         try {
@@ -26,7 +26,7 @@ public class GroupDao {
                     .right_admin(resultSet.getBoolean(6))
                     .build();
         } catch (SQLException e) {
-            LOGGER.error("Role creation error");
+            //LOGGER.error("Role creation error");
         }
         return null;
     }
@@ -36,14 +36,14 @@ public class GroupDao {
             return Warning.builder()
                     .id(resultSet.getInt(1))
                     .id_group(resultSet.getInt(2))
-                    .id_member(resultSet.getInt(3))
+                    .id_member(resultSet.getLong(3))
                     .id_cautioning(resultSet.getInt(4))
                     .cause(resultSet.getString(5))
                     .date(resultSet.getTimestamp(6))
                     .deadline(resultSet.getInt(7))
                     .build();
         } catch (SQLException e) {
-            LOGGER.error("Warning creation error");
+            //LOGGER.error("Warning creation error");
         }
         return null;
     }
@@ -55,19 +55,19 @@ public class GroupDao {
                     .title(resultSet.getString(2))
                     .build();
         } catch (SQLException e) {
-            LOGGER.error("Group creation error");
+            //LOGGER.error("Group creation error");
         }
         return null;
     }
 
-    public Boolean addMember(Integer id_member, Integer id_group, Integer id_role, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addMember(Long id_member, Integer id_group, Integer id_role, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 INSERT INTO members_in_group (id_group, id_member, id_role) VALUES (?, ?, ?)  ON CONFLICT (id_group, id_member) DO NOTHING;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
-            preparedStatement.setInt(2, id_member);
+            preparedStatement.setLong(2, id_member);
             preparedStatement.setInt(3, id_role);
             try {
                 return preparedStatement.executeUpdate() != 0;
@@ -77,14 +77,14 @@ public class GroupDao {
         }
     }
 
-    public Boolean editMember(Integer id_member, Integer id_group, Integer id_role, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editMember(Long id_member, Integer id_group, Integer id_role, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 UPDATE members_in_group SET id_role = ? WHERE id_member = ? and id_group = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_role);
-            preparedStatement.setInt(2, id_member);
+            preparedStatement.setLong(2, id_member);
             preparedStatement.setInt(3, id_group);
             try {
                 return preparedStatement.executeUpdate() != 0;
@@ -94,14 +94,14 @@ public class GroupDao {
         }
     }
 
-    public Boolean deleteMember(Integer id_member, Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteMember(Long id_member, Integer id_group, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM members_in_group WHERE id_group = ? and id_member = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
-            preparedStatement.setInt(2, id_member);
+            preparedStatement.setLong(2, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -188,7 +188,7 @@ public class GroupDao {
         }
     }
 
-    public Boolean addWarning(Integer id_member, Integer id_group, Integer id_cautioning, String cause, Integer deadline, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addWarning(Long id_member, Integer id_group, Long id_cautioning, String cause, Integer deadline, ConnectionPool connector) throws IOException, SQLException {
         ArrayList<Member> members = new GroupDao().getAllMemberInGroup(id_group, connector);
         if (members.stream().anyMatch(a -> Objects.equals(a.getId(), id_member))) {
             String SQL = """
@@ -197,8 +197,8 @@ public class GroupDao {
             try (Connection connection = connector.CreateConnect();
                  PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
                 preparedStatement.setInt(1, id_group);
-                preparedStatement.setInt(2, id_member);
-                preparedStatement.setInt(3, id_cautioning);
+                preparedStatement.setLong(2, id_member);
+                preparedStatement.setLong(3, id_cautioning);
                 preparedStatement.setString(4, cause);
                 preparedStatement.setTimestamp(5, new Timestamp(System.currentTimeMillis()));
                 preparedStatement.setInt(6, deadline);
@@ -218,14 +218,14 @@ public class GroupDao {
         else return false;
     }
 
-    public Boolean deleteWarning(Integer id_group, Integer id_member, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteWarning(Integer id_group, Long id_member, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM warnings WHERE id_group = ? and id_member = ? and Date is not null;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
-            preparedStatement.setInt(2, id_member);
+            preparedStatement.setLong(2, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0 && startWarning(id_group, id_member, connector);
             } catch (SQLException e) {
@@ -234,14 +234,14 @@ public class GroupDao {
         }
     }
 
-    public Boolean deleteAllWarnings(Integer id_group, Integer id_member, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteAllWarnings(Integer id_group, Long id_member, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 DELETE FROM warnings WHERE id_group = ? and id_member = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
-            preparedStatement.setInt(2, id_member);
+            preparedStatement.setLong(2, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -266,7 +266,7 @@ public class GroupDao {
         }
     }
 
-    public Boolean startWarning(Integer id_group, Integer id_member, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean startWarning(Integer id_group, Long id_member, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 UPDATE warnings SET date = ?
                 WHERE id =
@@ -278,7 +278,7 @@ public class GroupDao {
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
             preparedStatement.setInt(2, id_group);
-            preparedStatement.setInt(3, id_member);
+            preparedStatement.setLong(3, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -287,7 +287,7 @@ public class GroupDao {
         }
     }
 
-    public Boolean stopWarning(Integer id_group, Integer id_member, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean stopWarning(Integer id_group, Long id_member, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 UPDATE warnings SET date = null
                 WHERE id =
@@ -298,7 +298,7 @@ public class GroupDao {
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
-            preparedStatement.setInt(2, id_member);
+            preparedStatement.setLong(2, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -323,13 +323,13 @@ public class GroupDao {
         return result;
     }
 
-    public Integer getCountWarningsFromMemberInGroup(Integer id_member, Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public Integer getCountWarningsFromMemberInGroup(Long id_member, Integer id_group, ConnectionPool connector) throws IOException, SQLException {
         String SQL = """
                 SELECT COUNT(id) FROM warnings WHERE id_member = ? and id_group = ?
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1, id_member);
+            preparedStatement.setLong(1, id_member);
             preparedStatement.setInt(2, id_group);
             try (ResultSet resultSet = preparedStatement.executeQuery();){
                 resultSet.next();
@@ -387,7 +387,7 @@ public class GroupDao {
         return result;
     }
 
-    public ArrayList<Member> getMemberInGroupInChat(Integer id_group, Integer id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<Member> getMemberInGroupInChat(Integer id_group, Long id_chat, ConnectionPool connector) throws IOException, SQLException {
         ArrayList<Member> result = new ArrayList<>();
         String SQL = """
                 SELECT members.id, first_name, last_name, user_name,
@@ -398,7 +398,7 @@ public class GroupDao {
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
             preparedStatement.setInt(1, id_group);
-            preparedStatement.setInt(2, id_chat);
+            preparedStatement.setLong(2, id_chat);
             try (ResultSet resultSet = preparedStatement.executeQuery()){
                 while (resultSet.next())
                 {
