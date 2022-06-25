@@ -9,6 +9,7 @@ import lombok.ToString;
 @ToString
 public class MemberVault {
     private State state;
+    private Integer id_message = null;
     private Integer id_group = null;
     private Integer id_category = null;
     private Long id_member = null;

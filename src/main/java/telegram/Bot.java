@@ -6,8 +6,11 @@ import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.ChatMemberUpdated;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
+import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.request.BaseRequest;
 import com.pengrad.telegrambot.request.DeleteMessage;
+import com.pengrad.telegrambot.request.SendMessage;
 import telegram.domain.MemberVault;
 import telegram.domain.State;
 import telegram.handlers.HandlerEvent;
@@ -15,7 +18,9 @@ import telegram.handlers.HandlerGroupMessages;
 import telegram.handlers.mechanicsStates.HandlerState;
 import util.ConnectionPool.ConnectionPool;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Bot {
@@ -36,7 +41,7 @@ public class Bot {
         try {
             System.out.println("Received Update");
 
-            BaseRequest request = null;
+            List<BaseRequest> request = new ArrayList<>();
 
             Boolean inHandlers = false;
 
@@ -50,31 +55,36 @@ public class Bot {
                 id_member = message.from().id();
 
                 if (!new HandlerState().checkBotChat(message)) {
-                    request = new HandlerGroupMessages().processing(message, connector);
+                    request.add(new HandlerGroupMessages().processing(message, connector));
                     id_member = null;
                 }
                 else if (message.text().startsWith("/default")) {
                     controllerStates.put(id_member, new MemberVault(stateDefault));
+                    request.add(new DeleteMessage(message.chat().id(), message.messageId()));
                 }
                 else if (message.text().startsWith("/exit")) {
                     controllerStates.remove(id_member);
+                    request.add(new DeleteMessage(message.chat().id(), message.messageId()));
                 }
             }
             else if (callbackQuery != null) {
                 id_member = callbackQuery.from().id();
             }
             else if (myChatMember != null) {
-                request = new HandlerEvent().processing(myChatMember, connector);
+                request.add(new HandlerEvent().processing(myChatMember, connector));
             }
 
             if (controllerStates.containsKey(id_member)) {
-                request = new HandlerState().processing(controllerStates.get(id_member), message, callbackQuery);
+                request.addAll(new HandlerState().processing(controllerStates.get(id_member), message, callbackQuery));
             }
             else if(callbackQuery != null)
-                request = new DeleteMessage(callbackQuery.message().chat().id(), callbackQuery.message().messageId());
+                request.add(new DeleteMessage(callbackQuery.message().chat().id(), callbackQuery.message().messageId()));
 
-            if (request != null) {
-                bot.execute(request);
+
+            for (BaseRequest e : request
+            ) {
+                if (e != null)
+                    bot.execute(e);
             }
 
         } catch (NullPointerException ignored) {
