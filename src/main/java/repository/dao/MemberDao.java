@@ -1,5 +1,6 @@
 package repository.dao;
 
+import kotlin.Pair;
 import repository.domain.Member;
 import repository.domain.Role;
 import util.ConnectionPool.ConnectionPool;
@@ -10,6 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class MemberDao {
     //private final Logger LOGGER = Logger.getLogger(MemberDao.class);
@@ -53,7 +55,7 @@ public class MemberDao {
         return null;
     }
 
-    public Boolean addMember(Long id, String first_name, String last_name, String user_name, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addMember(Long id, String first_name, String last_name, String user_name, ConnectionPool connector) {
         String SQL = """
                 INSERT INTO members (id, first_name, last_name, user_name) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO NOTHING;
                 """;
@@ -71,7 +73,7 @@ public class MemberDao {
         }
     }
 
-    public Boolean editMember(Long id, String first_name, String last_name, String user_name, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editMember(Long id, String first_name, String last_name, String user_name, ConnectionPool connector) {
         String SQL = """
                 UPDATE members SET first_name = ?, last_name = ?, user_name = ? WHERE id = ?;
                 """;
@@ -89,7 +91,7 @@ public class MemberDao {
         }
     }
 
-    public Boolean deleteMember(Long id, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteMember(Long id, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM members WHERE id = ?;
                 """;
@@ -104,7 +106,32 @@ public class MemberDao {
         }
     }
 
-    //Метод просмотр в каких группах есть этот пользователь
+    public ArrayList<Pair<String,String>> getAllGroups(Long id_member, ConnectionPool connector){
+        ArrayList<Pair<String,String>> result = new ArrayList<>();
+        String SQL = """
+                select groups.title, groups.id
+                  from members JOIN groups
+                  ON members.id=groups.id
+                  where members.id =?
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
+            preparedStatement.setLong(1, id_member);
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+                while (resultSet.next())
+                {
+                    result.add(new Pair<String,String>(resultSet.getString(1), resultSet.getString(2)));
+                }
+            }
+        }
+        catch (Exception e){
+            return null;
+        }
+        return result;
+    }
+
+
+   //Метод просмотр в каких группах есть этот пользователь
 
 
 

@@ -9,27 +9,26 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class Database {
-    public static Boolean recreateDatabase(ConnectionPool connector) throws IOException, SQLException {
+    public static Boolean recreateDatabase(ConnectionPool connector) {
         String SQL = """
                 DROP SCHEMA public CASCADE;
                 CREATE SCHEMA public;
-                                
                 CREATE TABLE "members" (
-                  "id" integer PRIMARY KEY,
+                  "id" bigint PRIMARY KEY,
                   "first_name" char varying(90) NOT NULL,
                   "last_name" char varying(90),
                   "user_name" char varying(90)
                 );
                                 
                 CREATE TABLE "chats" (
-                  "id" integer PRIMARY KEY,
+                  "id" bigint PRIMARY KEY,
                   "title" char varying(150) NOT NULL,
                   "ping" boolean NOT NULL DEFAULT false
                 );
                                 
                 CREATE TABLE "members_in_chat" (
-                  "id_chat" integer,
-                  "id_member" integer,
+                  "id_chat" bigint,
+                  "id_member" bigint,
                   PRIMARY KEY ("id_chat", "id_member")
                 );
                                 
@@ -49,10 +48,17 @@ public class Database {
                                 
                 CREATE TABLE "members_in_group" (
                   "id_group" integer,
-                  "id_member" integer,
+                  "id_member" bigint,
                   "id_role" integer,
                   PRIMARY KEY ("id_group", "id_member")
                 );
+                             
+                CREATE TABLE "observers_in_group" (
+                  "id_group" integer,
+                  "id_member" id_member,
+                  PRIMARY KEY ("id_group", "id_member")
+                );
+                                
                                 
                 CREATE TABLE "categories" (
                   "id" integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -79,7 +85,7 @@ public class Database {
                 );
                                 
                 CREATE TABLE "resource_chat" (
-                  "id" integer PRIMARY KEY
+                  "id" bigint PRIMARY KEY
                 );
                                 
                 ALTER TABLE "members_in_chat" ADD FOREIGN KEY ("id_chat") REFERENCES "chats" ("id") ON DELETE CASCADE;
@@ -91,6 +97,10 @@ public class Database {
                 ALTER TABLE "members_in_group" ADD FOREIGN KEY ("id_member") REFERENCES "members" ("id") ON DELETE CASCADE;
                                 
                 ALTER TABLE "members_in_group" ADD FOREIGN KEY ("id_role") REFERENCES "roles" ("id") ON DELETE CASCADE;
+                                
+                ALTER TABLE "observers_in_group" ADD FOREIGN KEY ("id_group") REFERENCES "groups" ("id");
+                                
+                ALTER TABLE "observers_in_group" ADD FOREIGN KEY ("id_member") REFERENCES "members" ("id");
                                 
                 ALTER TABLE "categories" ADD FOREIGN KEY ("id_group") REFERENCES "groups" ("id") ON DELETE CASCADE;
                                 
@@ -112,7 +122,6 @@ public class Database {
             }
         }
     }
-
     public static Boolean createAllRoles(ConnectionPool connector) {
         try {
             RoleDao roleDao = new RoleDao();
@@ -126,5 +135,18 @@ public class Database {
             return false;
         }
         return true;
+    }
+    public static boolean createResourceChat(ConnectionPool connector) {
+        String SQL = """                
+                Insert into resource_chat(id) Values(-1001207927836) ON CONFLICT (id) DO NOTHING;
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            try {
+                return preparedStatement.executeUpdate() != 0;
+            } catch (SQLException e) {
+                return false;
+            }
+        }
     }
 }

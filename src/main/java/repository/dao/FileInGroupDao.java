@@ -39,7 +39,7 @@ public class FileInGroupDao {
         return null;
     }
 
-    public Boolean addFile(Integer id, Integer id_category, String title, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addFile(Integer id, Integer id_category, String title, ConnectionPool connector) {
         String SQL = """
                 INSERT INTO files (id, id_category, title, data_create) VALUES (?, ?, ?, ?) ON CONFLICT (id, id_category) DO NOTHING;
                 """;
@@ -57,7 +57,7 @@ public class FileInGroupDao {
         }
     }
 
-    public Boolean editFile(Integer id, Integer id_category, String title, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editFile(Integer id, Integer id_category, String title, ConnectionPool connector) {
         String SQL = """
                 UPDATE files SET id_category = ?, title = ? WHERE id = ?;
                 """;
@@ -74,7 +74,7 @@ public class FileInGroupDao {
         }
     }
 
-    public Boolean deleteFile(Integer id, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteFile(Integer id, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM files WHERE id = ?;
                 """;
@@ -89,7 +89,7 @@ public class FileInGroupDao {
         }
     }
 
-    public Boolean deleteAllFiles(Integer id_category, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteAllFiles(Integer id_category, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM files WHERE id_category = ?;
                 """;
@@ -104,7 +104,7 @@ public class FileInGroupDao {
         }
     }
 
-    public Integer addCategory(Integer id_group, String title, ConnectionPool connector) throws IOException, SQLException {
+    public Integer addCategory(Integer id_group, String title, ConnectionPool connector) {
         String SQL = """
                 INSERT INTO categories (id_group, title) VALUES (?, ?) RETURNING id;
                 """;
@@ -121,7 +121,7 @@ public class FileInGroupDao {
         }
     }
 
-    public Boolean editCategory(Integer id, String title, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editCategory(Integer id, String title, ConnectionPool connector) {
         String SQL = """
                 UPDATE categories SET title = ? WHERE id = ?;
                 """;
@@ -137,7 +137,7 @@ public class FileInGroupDao {
         }
     }
 
-    public Boolean deleteCategory(Integer id, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteCategory(Integer id, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM categories WHERE id = ?;
                 """;
@@ -152,7 +152,7 @@ public class FileInGroupDao {
         }
     }
 
-    public Boolean deleteAllCategories(Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteAllCategories(Integer id_group, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM categories WHERE id_group = ?;
                 """;
@@ -167,7 +167,7 @@ public class FileInGroupDao {
         }
     }
 
-    public ArrayList<Category> getAllCategories(Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<Category> getAllCategories(Integer id_group, ConnectionPool connector) {
         ArrayList<Category> result = new ArrayList<>();
         String SQL = """
                 SELECT * FROM categories WHERE id_group = ?
@@ -184,7 +184,7 @@ public class FileInGroupDao {
         return result;
     }
 
-    public ArrayList<File> getAllFiles(Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<File> getAllFiles(Integer id_group, ConnectionPool connector) {
         ArrayList<File> result = new ArrayList<>();
         String SQL = """
                 SELECT files.id, files.id_category, files.title, files.data_create FROM files, categories, groups WHERE categories.id_group=groups.id and groups.id = ?
@@ -201,7 +201,7 @@ public class FileInGroupDao {
         return result;
     }
 
-    public ArrayList<File> getAllFilesInCategory(Integer id_category, ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<File> getAllFilesInCategory(Integer id_category, ConnectionPool connector) {
         ArrayList<File> result = new ArrayList<>();
         String SQL = """
                 SELECT * FROM files WHERE id_category = ?

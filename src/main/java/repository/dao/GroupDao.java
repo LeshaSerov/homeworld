@@ -60,7 +60,7 @@ public class GroupDao {
         return null;
     }
 
-    public Boolean addMember(Long id_member, Integer id_group, Integer id_role, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addMember(Long id_member, Integer id_group, Integer id_role, ConnectionPool connector) {
         String SQL = """
                 INSERT INTO members_in_group (id_group, id_member, id_role) VALUES (?, ?, ?)  ON CONFLICT (id_group, id_member) DO NOTHING;
                 """;
@@ -77,7 +77,7 @@ public class GroupDao {
         }
     }
 
-    public Boolean editMember(Long id_member, Integer id_group, Integer id_role, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editMember(Long id_member, Integer id_group, Integer id_role, ConnectionPool connector) {
         String SQL = """
                 UPDATE members_in_group SET id_role = ? WHERE id_member = ? and id_group = ?;
                 """;
@@ -94,7 +94,7 @@ public class GroupDao {
         }
     }
 
-    public Boolean deleteMember(Long id_member, Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteMember(Long id_member, Integer id_group, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM members_in_group WHERE id_group = ? and id_member = ?;
                 """;
@@ -108,9 +108,12 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public Boolean deleteAllMembers(Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteAllMembers(Integer id_group, ConnectionPool connector) {
         String SQL = """
                 DELETE members_in_groups WHERE id_group = ?;
                 """;
@@ -123,25 +126,88 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public ArrayList<Role> getAllRole(ConnectionPool connector) throws IOException, SQLException {
-        ArrayList<Role> result = new ArrayList<>();
+    public Boolean addObserver(Long id_member, Integer id_group, ConnectionPool connector) {
         String SQL = """
-                SELECT * FROM roles
+                INSERT INTO observers_in_group (id_group, id_member) VALUES (?, ?)  ON CONFLICT (id_group, id_member) DO NOTHING;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    result.add(getRoleFromResultSet(resultSet));
-                }
+            preparedStatement.setInt(1, id_group);
+            preparedStatement.setLong(2, id_member);
+            try {
+                return preparedStatement.executeUpdate() != 0;
+            } catch (SQLException e) {
+                return false;
             }
         }
-        return result;
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public Integer addGroup(String title, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editObserver(Long id_member, Integer id_group, Integer id_role, ConnectionPool connector) {
+        String SQL = """
+                UPDATE observers_in_group SET id_role = ? WHERE id_member = ? and id_group = ?;
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1, id_role);
+            preparedStatement.setLong(2, id_member);
+            preparedStatement.setInt(3, id_group);
+            try {
+                return preparedStatement.executeUpdate() != 0;
+            } catch (SQLException e) {
+                return false;
+            }
+        }
+        catch (SQLException sqlException){
+            return false;
+        }
+    }
+
+    public Boolean deleteObserver(Long id_member, Integer id_group, ConnectionPool connector) {
+        String SQL = """
+                DELETE FROM observers_in_group WHERE id_group = ? and id_member = ?;
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1, id_group);
+            preparedStatement.setLong(2, id_member);
+            try {
+                return preparedStatement.executeUpdate() != 0;
+            } catch (SQLException e) {
+                return false;
+            }
+        }
+        catch (SQLException sqlException){
+            return false;
+        }
+    }
+
+    public Boolean deleteAllObservers(Integer id_group, ConnectionPool connector) {
+        String SQL = """
+                DELETE observers_in_group WHERE id_group = ?;
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1, id_group);
+            try {
+                return preparedStatement.executeUpdate() != 0;
+            } catch (SQLException e) {
+                return false;
+            }
+        }
+        catch (SQLException sqlException){
+            return false;
+        }
+    }
+
+    public Integer addGroup(String title, ConnectionPool connector) {
         String SQL = """
                 INSERT INTO groups (title) VALUES (?) RETURNING id;
                 """;
@@ -155,9 +221,12 @@ public class GroupDao {
                 return -1;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public Boolean editGroup(Integer id_group, String title, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editGroup(Integer id_group, String title, ConnectionPool connector) {
         String SQL = """
                 UPDATE groups SET title = ? WHERE id = ?;
                 """;
@@ -171,9 +240,12 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public Boolean deleteGroup(Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteGroup(Integer id_group, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM groups WHERE id = ?;
                 """;
@@ -186,9 +258,12 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public Boolean addWarning(Long id_member, Integer id_group, Long id_cautioning, String cause, Integer deadline, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addWarning(Long id_member, Integer id_group, Long id_cautioning, String cause, Integer deadline, ConnectionPool connector) {
         ArrayList<Member> members = new GroupDao().getAllMemberInGroup(id_group, connector);
         if (members.stream().anyMatch(a -> Objects.equals(a.getId(), id_member))) {
             String SQL = """
@@ -214,11 +289,14 @@ public class GroupDao {
                     return false;
                 }
             }
+            catch (SQLException sqlException){
+                return false;
+            }
         }
         else return false;
     }
 
-    public Boolean deleteWarning(Integer id_group, Long id_member, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteWarning(Integer id_group, Long id_member, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM warnings WHERE id_group = ? and id_member = ? and Date is not null;
                 """;
@@ -232,9 +310,12 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public Boolean deleteAllWarnings(Integer id_group, Long id_member, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteAllWarnings(Integer id_group, Long id_member, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM warnings WHERE id_group = ? and id_member = ?;
                 """;
@@ -248,9 +329,12 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public Boolean deleteAllWarningsInGroup(Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteAllWarningsInGroup(Integer id_group, ConnectionPool connector) {
         try {
             ArrayList<Warning> result = getAllWarnings(connector);
             for (Warning object : result) {
@@ -266,7 +350,7 @@ public class GroupDao {
         }
     }
 
-    public Boolean startWarning(Integer id_group, Long id_member, ConnectionPool connector) throws IOException, SQLException {
+    private Boolean startWarning(Integer id_group, Long id_member, ConnectionPool connector) {
         String SQL = """
                 UPDATE warnings SET date = ?
                 WHERE id =
@@ -285,9 +369,12 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public Boolean stopWarning(Integer id_group, Long id_member, ConnectionPool connector) throws IOException, SQLException {
+    private Boolean stopWarning(Integer id_group, Long id_member, ConnectionPool connector) {
         String SQL = """
                 UPDATE warnings SET date = null
                 WHERE id =
@@ -305,9 +392,12 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (SQLException sqlException){
+            return false;
+        }
     }
 
-    public ArrayList<Warning> getAllWarnings(ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<Warning> getAllWarnings(ConnectionPool connector) {
         ArrayList<Warning> result = new ArrayList<>();
         String SQL = """
                 SELECT * FROM warnings
@@ -320,10 +410,13 @@ public class GroupDao {
                 }
             }
         }
+        catch (SQLException sqlException){
+            return null;
+        }
         return result;
     }
 
-    public Integer getCountWarningsFromMemberInGroup(Long id_member, Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public Integer getCountWarningsFromMemberInGroup(Long id_member, Integer id_group, ConnectionPool connector) {
         String SQL = """
                 SELECT COUNT(id) FROM warnings WHERE id_member = ? and id_group = ?
                 """;
@@ -338,9 +431,12 @@ public class GroupDao {
                 return -1;
             }
         }
+        catch (SQLException sqlException){
+            return -1;
+        }
     }
 
-    public boolean CheckWarning(ConnectionPool connector) {
+    public Boolean CheckWarning(ConnectionPool connector) {
         try {
             ArrayList<Warning> result = getAllWarnings(connector);
             for (Warning object : result) {
@@ -359,7 +455,7 @@ public class GroupDao {
         }
     }
 
-    public ArrayList<Member> getAllMemberInGroup(Integer id_group, ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<Member> getAllMemberInGroup(Integer id_group, ConnectionPool connector) {
         ArrayList<Member> result = new ArrayList<>();
         String SQL = """
                 SELECT members.id, first_name, last_name, user_name,
@@ -384,10 +480,13 @@ public class GroupDao {
                 }
             }
         }
+        catch (SQLException sqlException){
+            return null;
+        }
         return result;
     }
 
-    public ArrayList<Member> getMemberInGroupInChat(Integer id_group, Long id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<Member> getMemberInGroupInChat(Integer id_group, Long id_chat, ConnectionPool connector) {
         ArrayList<Member> result = new ArrayList<>();
         String SQL = """
                 SELECT members.id, first_name, last_name, user_name,
@@ -405,6 +504,9 @@ public class GroupDao {
                     result.add(new MemberDao().getMemberFromResultSet(resultSet));
                 }
             }
+        }
+        catch (SQLException sqlException){
+            return null;
         }
         return result;
     }

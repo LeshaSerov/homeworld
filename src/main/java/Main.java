@@ -1,6 +1,6 @@
-package telegram;
+import telegram.Bot;
 
-class Starter {
+class Main {
     public static void main(String[] args) {
         new Bot().start();
     }

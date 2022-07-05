@@ -31,22 +31,7 @@ public class RoleDao {
         return null;
     }
 
-    public ArrayList<Role> allRole(ConnectionPool connector) throws IOException, SQLException {
-        ArrayList<Role> result = new ArrayList<>();
-        String SQL_ALL_MEMBERS_IN_CHAT = "SELECT * FROM roles";
-        try (Connection connection = connector.CreateConnect();
-             PreparedStatement preparedStatement = connection.prepareStatement(SQL_ALL_MEMBERS_IN_CHAT)){
-            try (ResultSet resultSet = preparedStatement.executeQuery()){
-                while (resultSet.next())
-                {
-                    result.add(getRoleFromResultSet(resultSet));
-                }
-            }
-        }
-        return result;
-    }
-
-    public Integer addRole(String title, Boolean right_ping, Boolean right_edit, Boolean right_to_view, Boolean right_admin, ConnectionPool connector) throws IOException, SQLException {
+    public Integer addRole(String title, Boolean right_ping, Boolean right_edit, Boolean right_to_view, Boolean right_admin, ConnectionPool connector) {
         String SQL = """
                 INSERT INTO roles (title, right_ping, right_edit, right_to_view, right_admin) VALUES (?, ?, ?, ?, ?) RETURNING id;
                 """;
@@ -66,7 +51,7 @@ public class RoleDao {
         }
     }
 
-    public Boolean deleteRole(Integer id, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteRole(Integer id, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM roles WHERE id = ?;
                 """;
@@ -79,6 +64,22 @@ public class RoleDao {
                 return false;
             }
         }
+    }
+
+    public ArrayList<Role> getAllRoles(ConnectionPool connector) {
+        ArrayList<Role> result = new ArrayList<>();
+        String SQL = """
+                SELECT * FROM roles
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    result.add(getRoleFromResultSet(resultSet));
+                }
+            }
+        }
+        return result;
     }
 
 }

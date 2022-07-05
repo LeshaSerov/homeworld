@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 public class ConnectionPool {
 
-    public Connection CreateConnect() throws IOException, SQLException {
+    public Connection CreateConnect() {
         PropertyReader propertyReader = new PropertyReader();
         propertyReader.init();
         String url = propertyReader.getUrl();

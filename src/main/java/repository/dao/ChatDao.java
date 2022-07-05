@@ -14,7 +14,7 @@ import java.util.ArrayList;
 public class ChatDao {
     //private final Logger LOGGER = Logger.getLogger(ChatDao.class);
 
-    public Boolean addMember(Long id_member, Long id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addMember(Long id_member, Long id_chat, ConnectionPool connector) {
         String SQL = """
                 INSERT INTO members_in_chat (id_chat, id_member) VALUES (?, ?) ON CONFLICT (id_chat, id_member) DO NOTHING;
                 """;
@@ -30,7 +30,7 @@ public class ChatDao {
         }
     }
 
-    public Boolean deleteMember(Long id_member, Long id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteMember(Long id_member, Long id_chat, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM members_in_chat WHERE id_chat = ? and id_member = ?;
                 """;
@@ -46,7 +46,7 @@ public class ChatDao {
         }
     }
 
-    public Boolean deleteAllMembers(Long id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteAllMembers(Long id_chat, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM members_in_chat WHERE id_chat = ?;
                 """;
@@ -61,7 +61,7 @@ public class ChatDao {
         }
     }
 
-    public Boolean addChat(Long id, String title, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean addChat(Long id, String title, ConnectionPool connector) {
         String SQL = """
                 INSERT INTO chats (id, title) VALUES (?, ?) ON CONFLICT (id) DO NOTHING;
                 """;
@@ -78,7 +78,7 @@ public class ChatDao {
 
     }
 
-    public Boolean editChat(Long id_chat, String title, Boolean ping, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean editChat(Long id_chat, String title, Boolean ping, ConnectionPool connector) {
         String SQL = """
                 UPDATE chats SET title = ?, ping = ? WHERE id = ?;
                 """;
@@ -95,7 +95,7 @@ public class ChatDao {
         }
     }
 
-    public Boolean deleteChat(Long id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public Boolean deleteChat(Long id_chat, ConnectionPool connector) {
         String SQL = """
                 DELETE FROM chats WHERE id = ?;
                 """;
@@ -110,7 +110,7 @@ public class ChatDao {
         }
     }
 
-    public ArrayList<Member> getAllMemberInChat(Long id_chat, ConnectionPool connector) throws IOException, SQLException {
+    public ArrayList<Member> getAllMemberInChat(Long id_chat, ConnectionPool connector) {
         ArrayList<Member> result = new ArrayList<>();
         String SQL = """
                 SELECT members.id, first_name, last_name, user_name

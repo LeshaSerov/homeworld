@@ -1,143 +1,176 @@
 package telegram;
 
 import repository.Database;
+import telegram.domain.MemberData;
 import telegram.domain.State;
+import telegram.domain.StateMachine;
+import telegram.operators.OperatorsWhichGeneratesKeyboard;
 import util.ConnectionPool.ConnectionPool;
+
+import java.util.function.BinaryOperator;
 
 public class Initiator {
 
-    public Boolean initializeDatabase(ConnectionPool connector){
-        try{
-            return Database.recreateDatabase(connector) && Database.createAllRoles(connector);
-        }catch (Exception ignored)
-        {
+    public static Boolean reset(ConnectionPool connector) {
+        try {
+            return Database.recreateDatabase(connector) && Database.createAllRoles(connector) && Database.createResourceChat(connector);
+        } catch (Exception ignored) {
             return false;
         }
     }
 
-    public State initializeDefaultState() {
-        String description = "Default";
-        State aDefault = new State("Default", description);
+    public static State initializeDefaultState() {
 
-        description = "AddGroup";
-        aDefault.addPath(new State("AddGroup", description, "Добавить Группу", aDefault));
-        aDefault.next("AddGroup").setHandlerMessage("AddGroup");
+        //Объявление машины состояний - тут главное описание.
+        StateMachine stateMachine = new StateMachine(
+                "Default",
+                "Привет)))"
+        );
 
-        description = "ListGroup";
-        aDefault.addPath(new State("ListGroup", description, "Список Групп", aDefault));
-        aDefault = aDefault.next("ListGroup");
+        stateMachine.addPathProcessesMessages(
+                operator,
+                "AddGroup",
+                "Введите название группы",
+                "Добавить Группу"
+        );
+
+        stateMachine.addPathGenerateKeyboard(
+                "ListGroup",
+                "",
+                "Список Групп",
+                OperatorsWhichGeneratesKeyboard::listGroup,
+                MemberData.TypeReceivedInformation.IdGroup,
+                "Группа",
+                ""
+        ).next("ListGroup").next("Group");
         {
-            description = "Group";
-            aDefault.addButtonGenerating("ListGroup", new State("Group", description, null, aDefault));
-            aDefault = aDefault.next("Group");
+            //Состояние Group
+
+            stateMachine.addPathGenerateKeyboard(
+                    "ListMembersGroup",
+                    "",
+                    "Список участников группы",
+                    OperatorsWhichGeneratesKeyboard::listMembersGroup,
+                    MemberData.TypeReceivedInformation.IdMember,
+                    "Member",
+                    ""
+            ).next("ListMembersGroup").next("Member");
             {
-                description = "ListMembersGroup";
-                aDefault.addPath(new State("ListMembersGroup", description, "Список участников группы", aDefault));
-                aDefault = aDefault.next("ListMembersGroup");
-                {
-                    description = "Member";
-                    aDefault.addButtonGenerating("ListMembersGroup", new State("Member", description, null, aDefault));
-                    aDefault = aDefault.next("Member");
-                    {
-                        description = null;
-                        aDefault.addPath(new State("DeleteMember", description, "Удалить участника", aDefault.previous()));
-                        aDefault.next("DeleteMember").setHandlerActivator("DeleteMEmber");
+                //Состояние Member
 
-                        description = "ListRoles";
-                        aDefault.addPath(new State("ListRoles", description, "Изменить роль участника", aDefault));
-                        aDefault = aDefault.next("ListRoles");
-                        {
-                            description = "ChangeRole";
-                            aDefault.addButtonGenerating("ListRoles", new State("ChangeRole", description, null, aDefault));
-                            aDefault.next("ChangeRole").setHandlerMessage("ChangeRole");
+                stateMachine.addPathRunAtStartup(
+                        operator,
+                        "DeleteMember",
+                        "Удалить участника"
+                );
 
-                            aDefault = aDefault.previous();
-                        }
-                        aDefault = aDefault.previous();
-                    }
-                    aDefault = aDefault.previous();
-                }
+                stateMachine.addPathRunAtStartup(
+                        operator,
+                        "ChangeRole",
+                        ""
+                );
+                stateMachine.relocationPathInPathGenerateKeyboard(
+                        "ListRoles",
+                        "",
+                        "Изменить Роль",
+                        operator,
+                        MemberData.TypeReceivedInformation.IdRole,
+                        "ChangeRole"
+                );
 
-                description = "ListOfApplicants";
-                aDefault.addPath(new State("ListOfApplicants", description, "Добавить участника в группу", aDefault));
-                aDefault = aDefault.next("ListOfApplicants");
-                {
-                    description = null;
-                    aDefault.addButtonGenerating("ListOfApplicants", new State("AddMember", description, null, aDefault));
-                    aDefault.next("AddMember").setHandlerActivator("AddMember");
-
-                    aDefault = aDefault.previous();
-                }
-
-                description = "FileSystem";
-                aDefault.addPath(new State("FileSystem", description, "Файловая Система", aDefault));
-                aDefault = aDefault.next("FileSystem");
-                {
-                    description = "AddCategory";
-                    aDefault.addPath(new State("AddCategory", description, "Добавить категорию", aDefault));
-                    aDefault.next("AddCategory").setHandlerMessage("AddCategory");
-
-                    description = "ListCategories";
-                    aDefault.addPath(new State("ListCategories", description, "Список Категорий", aDefault));
-                    aDefault = aDefault.next("ListCategories");
-                    {
-                        description = "Category";
-                        aDefault.addButtonGenerating("ListCategories", new State("Category", description, null, aDefault));
-                        aDefault = aDefault.next("Category");
-                        {
-                            description = null;
-                            aDefault.addPath(new State("DeleteCategory", description, "Удалить категорию", aDefault.previous()));
-                            aDefault.next("DeleteCategory").setHandlerActivator("DeleteCategory");
-
-                            description = "EditCategory";
-                            aDefault.addPath(new State("EditCategory", description, "Редактировать категорию", aDefault));
-                            aDefault.next("EditCategory").setHandlerMessage("EditCategory");
-
-                            aDefault = aDefault.previous();
-                        }
-                        aDefault = aDefault.previous();
-                    }
-
-                    description = "SelectCategory";
-                    aDefault.addPath(new State("SelectCategory", description, "Добавление файла", aDefault));
-                    aDefault = aDefault.next("SelectCategory");
-                    {
-                        description = "AddFile";
-                        aDefault.addButtonGenerating("ListCategories", new State("AddFile", description, null, aDefault));
-                        aDefault.next("AddFile").setHandlerMessage("AddFile");
-
-                        aDefault = aDefault.previous();
-                    }
-
-                    description = "SelectListFiles";
-                    aDefault.addPath(new State("SelectListFiles", description, "Файлы", aDefault));
-                    aDefault = aDefault.next("SelectListFiles");
-                    {
-                        description = "SelectCategory";
-                        aDefault.addPath(new State("SelectCategory", description, null, aDefault));
-                        aDefault = aDefault.next("SelectCategory");
-                        {
-                            description = "ListCategories";
-                            aDefault.addButtonGenerating("ListCategories", new State("SelectDate", description, null, aDefault));
-
-                            description = null;
-                            aDefault = aDefault.next("SelectDate");
-                            {
-                                aDefault.addButtonGenerating("ListDates", new State("GetFiles", description, null, aDefault.previous().previous().previous()));
-                                aDefault.next("GetFiles").setHandlerActivator("GetFiles");
-                                aDefault = aDefault.previous();
-                            }
-                            aDefault = aDefault.previous();
-                        }
-                        aDefault = aDefault.previous();
-                    }
-                    aDefault = aDefault.previous();
-                }
-                aDefault = aDefault.previous();
+                stateMachine.previous().previous();
             }
-            aDefault = aDefault.previous();
+
+            stateMachine.addPathRunAtStartup(
+                    operator,
+                    "AddMember",
+                    ""
+            );
+            stateMachine.relocationPathInPathGenerateKeyboard(
+                    "ListNonMembers",
+                    "",
+                    "Добавить участников в группу",
+                    operator,
+                    MemberData.TypeReceivedInformation.IdMember,
+                    "AddMember"
+            );
+
+            stateMachine.addPath(
+                    "FileSystem",
+                    "",
+                    "Файловая Система"
+            ).next("FileSystem");
+            {
+                //Категория FileSystem
+
+                stateMachine.addPathProcessesMessages(
+                        operator,
+                        "AddCategory",
+                        "",
+                        "Добавить Категорию"
+                );
+
+                stateMachine.addPathGenerateKeyboard(
+                        "ListCategories",
+                        "",
+                        "Список категорий",
+                        operator,
+                        MemberData.TypeReceivedInformation.IdCategory,
+                        "Category",
+                        ""
+                ).next("ListCategories").next("Category");
+                {
+                    //Состояние Category
+
+                    stateMachine.addPathRunAtStartup(
+                            operator,
+                            "DeleteCategory",
+                            "Удалить категорию"
+                    );
+
+                    stateMachine.addPathProcessesMessages(
+                            operator,
+                            "EditCategory",
+                            "",
+                            "Редактировать категорию"
+                    );
+
+                    stateMachine.previous().previous();
+                }
+
+                stateMachine.addPathProcessesMessages(
+                        operator,
+                        "AddFile",
+                        "",
+                        null
+                );
+                stateMachine.relocationPathInPathGenerateKeyboard(
+                        "ListCategories",
+                        "",
+                        "Добавить Файл",
+                        operator,
+                        MemberData.TypeReceivedInformation.IdCategory,
+                        "AddFile"
+                );
+
+//                stateMachine.addPathGenerateKeyboard(
+//
+//                );
+//
+//
+//                stateMachine.addPathGenerateKeyboard(
+//                        "ListFiles",
+//                        "",
+//                        "Списки файлов",
+//                        operator,
+//                        "ListCategories",
+//                        ""
+//                )
+            }
+
+            stateMachine.previous().previous();
         }
-        aDefault = aDefault.previous();
-        return aDefault;
+
+        return stateMachine.getDefaultState();
     }
 }

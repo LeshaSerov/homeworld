@@ -22,7 +22,7 @@ public class GroupDaoTest {
 
         Integer id_role = new RoleDao().addRole("admin", true,true,true,true, connector);
 
-        ArrayList <Role> roles = new RoleDao().allRole(connector);
+        ArrayList <Role> roles = new RoleDao().getAllRoles(connector);
         for (Role auto: roles) {
             System.out.println(auto.toString());
         }
@@ -65,7 +65,7 @@ public class GroupDaoTest {
         result =new GroupDao().deleteAllMembers(id_group, connector);
         Assert.assertFalse(result);
 
-        ArrayList <Role> rolesGroup =new GroupDao().getAllRole(connector);
+        ArrayList <Role> rolesGroup =new RoleDao().getAllRoles(connector);
 
         result =new GroupDao().deleteGroup(id_group, connector);
         Assert.assertTrue(result);

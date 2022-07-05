@@ -1,16 +1,17 @@
-package telegram.handlers;
+package telegram.Events;
 
 import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.model.ChatMember;
 import com.pengrad.telegrambot.model.ChatMemberUpdated;
+import com.pengrad.telegrambot.request.BaseRequest;
 import com.pengrad.telegrambot.request.SendMessage;
 import repository.dao.ChatDao;
 import util.ConnectionPool.ConnectionPool;
 
 import static java.lang.Long.parseLong;
 
-public class HandlerEvent {
-    public SendMessage processing(ChatMemberUpdated myChatMember, ConnectionPool connector) {
+public class HandlerEventsModifyRightsBot {
+    public static BaseRequest process(ChatMemberUpdated myChatMember, ConnectionPool connector) {
         SendMessage request = null;
 
         Chat chat = myChatMember.chat();
@@ -26,17 +27,24 @@ public class HandlerEvent {
         if (status == statusKick) {
             DeleteChat(chat, connector);
         } else if (status == statusMember) {
-            answer = "Привет)\nПожалуйста, выдай мне админские права,\nиначе я не смогу работать в этом чате.";
+            answer = """
+                    Привет)
+                    Пожалуйста, выдай мне админские права,
+                    иначе я не смогу работать в этом чате.""";
             request = new SendMessage(chat_id, answer);
         } else if (status == statusAdministrator) {
             AddChat(chat, connector);
-            answer = "Привет)\nЯ Помощник. \nАдминские права обнаружил, \nПриступаю к своей работе";
+            answer = """
+                    Привет)
+                    Я Помощник.
+                    Админские права обнаружил,
+                    Приступаю к своей работе""";
             request = new SendMessage(chat_id, answer);
         }
         return request;
     }
 
-    private void AddChat(Chat chat, ConnectionPool connector) {
+    private static void AddChat(Chat chat, ConnectionPool connector) {
         try {
             Long chat_id = parseLong(chat.id().toString().replace("-100", ""));
             new ChatDao().addChat(chat_id, chat.title(), connector);
@@ -44,7 +52,7 @@ public class HandlerEvent {
         }
     }
 
-    private void DeleteChat(Chat chat, ConnectionPool connector) {
+    private static void DeleteChat(Chat chat, ConnectionPool connector) {
         try {
             new ChatDao().deleteChat(chat.id(), connector);
         } catch (Exception ignored) {
