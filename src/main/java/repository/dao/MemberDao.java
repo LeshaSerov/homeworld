@@ -71,6 +71,9 @@ public class MemberDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean editMember(Long id, String first_name, String last_name, String user_name, ConnectionPool connector) {
@@ -89,6 +92,9 @@ public class MemberDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean deleteMember(Long id, ConnectionPool connector) {
@@ -104,15 +110,19 @@ public class MemberDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public ArrayList<Pair<String,String>> getAllGroups(Long id_member, ConnectionPool connector){
         ArrayList<Pair<String,String>> result = new ArrayList<>();
         String SQL = """
-                select groups.title, groups.id
-                  from members JOIN groups
-                  ON members.id=groups.id
-                  where members.id =?
+                select groups.id, groups.title
+                from members, members_in_group, groups
+                where members.id=members_in_group.id_member and
+                groups.id = members_in_group.id_group
+                and members.id = ?
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
@@ -124,7 +134,32 @@ public class MemberDao {
                 }
             }
         }
-        catch (Exception e){
+        catch (Exception exception){
+            return null;
+        }
+        return result;
+    }
+
+    public ArrayList<Pair<String,String>> getAllChats(Long id_member, ConnectionPool connector){
+        ArrayList<Pair<String,String>> result = new ArrayList<>();
+        String SQL = """
+                select chats.id, chats.title
+                from members, members_in_chat, chats
+                where members.id=members_in_chat.id_member and
+                chats.id = members_in_chat.id_chat
+                and members.id = ?
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
+            preparedStatement.setLong(1, id_member);
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+                while (resultSet.next())
+                {
+                    result.add(new Pair<String,String>(resultSet.getString(1), resultSet.getString(2)));
+                }
+            }
+        }
+        catch (Exception exception){
             return null;
         }
         return result;

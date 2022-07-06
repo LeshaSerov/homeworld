@@ -48,12 +48,15 @@ public class FileInGroupDao {
             preparedStatement.setInt(1, id);
             preparedStatement.setInt(2, id_category);
             preparedStatement.setString(3, title);
-            preparedStatement.setTimestamp(4,  new Timestamp(System.currentTimeMillis()));
+            preparedStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
                 return false;
             }
+        }
+        catch (Exception exception){
+            return null;
         }
     }
 
@@ -72,6 +75,9 @@ public class FileInGroupDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean deleteFile(Integer id, ConnectionPool connector) {
@@ -86,6 +92,9 @@ public class FileInGroupDao {
             } catch (SQLException e) {
                 return false;
             }
+        }
+        catch (Exception exception){
+            return null;
         }
     }
 
@@ -102,6 +111,9 @@ public class FileInGroupDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Integer addCategory(Integer id_group, String title, ConnectionPool connector) {
@@ -112,12 +124,15 @@ public class FileInGroupDao {
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
             preparedStatement.setString(2, title);
-            try (ResultSet resultSet = preparedStatement.executeQuery();){
+            try (ResultSet resultSet = preparedStatement.executeQuery();) {
                 resultSet.next();
                 return resultSet.getInt(1);
             } catch (SQLException e) {
                 return -1;
             }
+        }
+        catch (Exception exception){
+            return null;
         }
     }
 
@@ -135,6 +150,9 @@ public class FileInGroupDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean deleteCategory(Integer id, ConnectionPool connector) {
@@ -149,6 +167,9 @@ public class FileInGroupDao {
             } catch (SQLException e) {
                 return false;
             }
+        }
+        catch (Exception exception){
+            return null;
         }
     }
 
@@ -165,6 +186,9 @@ public class FileInGroupDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public ArrayList<Category> getAllCategories(Integer id_group, ConnectionPool connector) {
@@ -174,12 +198,15 @@ public class FileInGroupDao {
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1,id_group);
+            preparedStatement.setInt(1, id_group);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     result.add(getCategoryFromResultSet(resultSet));
                 }
             }
+        }
+        catch (Exception exception){
+            return null;
         }
         return result;
     }
@@ -191,12 +218,15 @@ public class FileInGroupDao {
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1,id_group);
+            preparedStatement.setInt(1, id_group);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     result.add(getFileFromResultSet(resultSet));
                 }
             }
+        }
+        catch (Exception exception){
+            return null;
         }
         return result;
     }
@@ -208,14 +238,35 @@ public class FileInGroupDao {
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(1,id_category);
+            preparedStatement.setInt(1, id_category);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
                     result.add(getFileFromResultSet(resultSet));
                 }
             }
         }
+        catch (Exception exception){
+            return null;
+        }
         return result;
+    }
+
+    public Long getIdResourceChat(ConnectionPool connector) {
+        String SQL = """
+            select id
+            from resource_chat
+            LIMIT 1;
+            """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getLong(1);
+            }
+        }
+        catch (Exception exception){
+            return null;
+        }
     }
 
 }

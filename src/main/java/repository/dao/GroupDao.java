@@ -75,6 +75,9 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean editMember(Long id_member, Integer id_group, Integer id_role, ConnectionPool connector) {
@@ -92,6 +95,9 @@ public class GroupDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean deleteMember(Long id_member, Integer id_group, ConnectionPool connector) {
@@ -108,7 +114,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -126,7 +132,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -145,7 +151,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -165,7 +171,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -184,7 +190,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -202,7 +208,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -221,8 +227,8 @@ public class GroupDao {
                 return -1;
             }
         }
-        catch (SQLException sqlException){
-            return false;
+        catch (Exception exception){
+            return -1;
         }
     }
 
@@ -240,7 +246,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -258,7 +264,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -289,7 +295,7 @@ public class GroupDao {
                     return false;
                 }
             }
-            catch (SQLException sqlException){
+            catch (Exception exception){
                 return false;
             }
         }
@@ -310,7 +316,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -329,7 +335,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -369,7 +375,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -392,7 +398,7 @@ public class GroupDao {
                 return false;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return false;
         }
     }
@@ -410,7 +416,7 @@ public class GroupDao {
                 }
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return null;
         }
         return result;
@@ -431,7 +437,7 @@ public class GroupDao {
                 return -1;
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return -1;
         }
     }
@@ -480,7 +486,7 @@ public class GroupDao {
                 }
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return null;
         }
         return result;
@@ -505,7 +511,7 @@ public class GroupDao {
                 }
             }
         }
-        catch (SQLException sqlException){
+        catch (Exception exception){
             return null;
         }
         return result;

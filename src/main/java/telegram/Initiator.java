@@ -5,6 +5,8 @@ import telegram.domain.MemberData;
 import telegram.domain.State;
 import telegram.domain.StateMachine;
 import telegram.operators.OperatorsWhichGeneratesKeyboard;
+import telegram.operators.OperatorsWhichRunsAtStartup;
+import telegram.operators.OperatorsWhoProcessesMessages;
 import util.ConnectionPool.ConnectionPool;
 
 import java.util.function.BinaryOperator;
@@ -13,22 +15,24 @@ public class Initiator {
 
     public static Boolean reset(ConnectionPool connector) {
         try {
-            return Database.recreateDatabase(connector) && Database.createAllRoles(connector) && Database.createResourceChat(connector);
+            Boolean a1 = Database.recreateDatabase(connector);
+            Boolean a2 = Database.createAllRoles(connector);
+            Boolean a3 = Database.createResourceChat(connector);
+            return a1 && a2 && a3;
         } catch (Exception ignored) {
             return false;
         }
     }
 
     public static State initializeDefaultState() {
-
         //Объявление машины состояний - тут главное описание.
         StateMachine stateMachine = new StateMachine(
                 "Default",
-                "Привет)))"
+                "Стандартное состояние"
         );
 
         stateMachine.addPathProcessesMessages(
-                operator,
+                OperatorsWhoProcessesMessages::addGroup,
                 "AddGroup",
                 "Введите название группы",
                 "Добавить Группу"
@@ -36,19 +40,19 @@ public class Initiator {
 
         stateMachine.addPathGenerateKeyboard(
                 "ListGroup",
-                "",
+                "Выберите группу из списка",
                 "Список Групп",
                 OperatorsWhichGeneratesKeyboard::listGroup,
                 MemberData.TypeReceivedInformation.IdGroup,
                 "Группа",
-                ""
+                "Группа"
         ).next("ListGroup").next("Group");
         {
             //Состояние Group
 
             stateMachine.addPathGenerateKeyboard(
                     "ListMembersGroup",
-                    "",
+                    "Выберите участника из списка",
                     "Список участников группы",
                     OperatorsWhichGeneratesKeyboard::listMembersGroup,
                     MemberData.TypeReceivedInformation.IdMember,
@@ -59,13 +63,13 @@ public class Initiator {
                 //Состояние Member
 
                 stateMachine.addPathRunAtStartup(
-                        operator,
+                        OperatorsWhichRunsAtStartup::deleteMember,
                         "DeleteMember",
                         "Удалить участника"
                 );
 
                 stateMachine.addPathRunAtStartup(
-                        operator,
+                        OperatorsWhichRunsAtStartup::changeRole,
                         "ChangeRole",
                         ""
                 );
@@ -73,7 +77,7 @@ public class Initiator {
                         "ListRoles",
                         "",
                         "Изменить Роль",
-                        operator,
+                        OperatorsWhichGeneratesKeyboard::listRoles,
                         MemberData.TypeReceivedInformation.IdRole,
                         "ChangeRole"
                 );
@@ -82,29 +86,29 @@ public class Initiator {
             }
 
             stateMachine.addPathRunAtStartup(
-                    operator,
+                    OperatorsWhichRunsAtStartup::addMember,
                     "AddMember",
                     ""
             );
             stateMachine.relocationPathInPathGenerateKeyboard(
                     "ListNonMembers",
-                    "",
+                    "Нажмите на пользователя, чтобы добавить его в группу",
                     "Добавить участников в группу",
-                    operator,
+                    OperatorsWhichGeneratesKeyboard::listNonMembers,
                     MemberData.TypeReceivedInformation.IdMember,
                     "AddMember"
             );
 
             stateMachine.addPath(
                     "FileSystem",
-                    "",
+                    "Работа с файлами",
                     "Файловая Система"
             ).next("FileSystem");
             {
                 //Категория FileSystem
 
                 stateMachine.addPathProcessesMessages(
-                        operator,
+                        OperatorsWhoProcessesMessages::addCategory,
                         "AddCategory",
                         "",
                         "Добавить Категорию"
@@ -114,7 +118,7 @@ public class Initiator {
                         "ListCategories",
                         "",
                         "Список категорий",
-                        operator,
+                        OperatorsWhichGeneratesKeyboard::listCategories,
                         MemberData.TypeReceivedInformation.IdCategory,
                         "Category",
                         ""
@@ -123,13 +127,13 @@ public class Initiator {
                     //Состояние Category
 
                     stateMachine.addPathRunAtStartup(
-                            operator,
+                            OperatorsWhichRunsAtStartup::deleteCategory,
                             "DeleteCategory",
                             "Удалить категорию"
                     );
 
                     stateMachine.addPathProcessesMessages(
-                            operator,
+                            OperatorsWhoProcessesMessages::editCategory,
                             "EditCategory",
                             "",
                             "Редактировать категорию"
@@ -139,7 +143,7 @@ public class Initiator {
                 }
 
                 stateMachine.addPathProcessesMessages(
-                        operator,
+                        OperatorsWhoProcessesMessages::addFile,
                         "AddFile",
                         "",
                         null
@@ -148,7 +152,7 @@ public class Initiator {
                         "ListCategories",
                         "",
                         "Добавить Файл",
-                        operator,
+                        OperatorsWhichGeneratesKeyboard::listCategories,
                         MemberData.TypeReceivedInformation.IdCategory,
                         "AddFile"
                 );

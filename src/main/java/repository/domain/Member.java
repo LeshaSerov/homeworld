@@ -1,9 +1,6 @@
 package repository.domain;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @Builder
 @Getter
@@ -15,5 +12,5 @@ public class Member {
     private String last_name;
     private String user_name;
     private Integer number_of_warning;
-    private Role role = null;
+    Role role = null;
 }

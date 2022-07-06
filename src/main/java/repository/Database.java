@@ -55,7 +55,7 @@ public class Database {
                              
                 CREATE TABLE "observers_in_group" (
                   "id_group" integer,
-                  "id_member" id_member,
+                  "id_member" bigint,
                   PRIMARY KEY ("id_group", "id_member")
                 );
                                 
@@ -114,12 +114,14 @@ public class Database {
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-
             try {
-                return preparedStatement.executeUpdate() != 0;
+                return preparedStatement.executeUpdate() == 0;
             } catch (SQLException e) {
                 return false;
             }
+        }
+        catch (Exception exception){
+            return null;
         }
     }
     public static Boolean createAllRoles(ConnectionPool connector) {
@@ -147,6 +149,9 @@ public class Database {
             } catch (SQLException e) {
                 return false;
             }
+        }
+        catch (Exception exception){
+            return false;
         }
     }
 }

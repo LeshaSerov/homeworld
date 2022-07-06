@@ -49,6 +49,9 @@ public class RoleDao {
                 return -1;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean deleteRole(Integer id, ConnectionPool connector) {
@@ -64,6 +67,9 @@ public class RoleDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public ArrayList<Role> getAllRoles(ConnectionPool connector) {
@@ -78,6 +84,9 @@ public class RoleDao {
                     result.add(getRoleFromResultSet(resultSet));
                 }
             }
+        }
+        catch (Exception exception){
+            return null;
         }
         return result;
     }

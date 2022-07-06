@@ -46,7 +46,7 @@ public class HandlerEventsModifyRightsBot {
 
     private static void AddChat(Chat chat, ConnectionPool connector) {
         try {
-            Long chat_id = parseLong(chat.id().toString().replace("-100", ""));
+            Long chat_id = parseLong(chat.id().toString());
             new ChatDao().addChat(chat_id, chat.title(), connector);
         } catch (Exception ignored) {
         }

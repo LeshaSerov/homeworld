@@ -25,6 +25,9 @@ public class HandlerEventsInGroups {
         DeleteMemberInChat(chat_id, updateLeftUser.id(), connector);
         request = new SendMessage(chat_id, "Пользователь вышел из чата.");
     }
+    else {
+        AddMemberInChat(chat_id, new User(message.from().id()), connector);
+    }
 
     return request;
 }

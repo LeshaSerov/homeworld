@@ -28,6 +28,9 @@ public class ChatDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean deleteMember(Long id_member, Long id_chat, ConnectionPool connector) {
@@ -44,6 +47,9 @@ public class ChatDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean deleteAllMembers(Long id_chat, ConnectionPool connector) {
@@ -58,6 +64,9 @@ public class ChatDao {
             } catch (SQLException e) {
                 return false;
             }
+        }
+        catch (Exception exception){
+            return null;
         }
     }
 
@@ -75,7 +84,9 @@ public class ChatDao {
                 return false;
             }
         }
-
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean editChat(Long id_chat, String title, Boolean ping, ConnectionPool connector) {
@@ -93,6 +104,9 @@ public class ChatDao {
                 return false;
             }
         }
+        catch (Exception exception){
+            return null;
+        }
     }
 
     public Boolean deleteChat(Long id_chat, ConnectionPool connector) {
@@ -107,6 +121,9 @@ public class ChatDao {
             } catch (SQLException e) {
                 return false;
             }
+        }
+        catch (Exception exception){
+            return null;
         }
     }
 
@@ -128,6 +145,9 @@ public class ChatDao {
                     result.add(new MemberDao().getMemberFromResultSet(resultSet));
                 }
             }
+        }
+        catch (Exception exception){
+            return null;
         }
         return result;
     }

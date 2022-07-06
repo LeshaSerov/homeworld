@@ -1,18 +1,16 @@
 package telegram.domain;
 
-import com.pengrad.telegrambot.model.CallbackQuery;
-import com.pengrad.telegrambot.model.Message;
+import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.request.BaseRequest;
 import kotlin.Pair;
 import lombok.*;
+import telegram.Bot;
 import util.ConnectionPool.ConnectionPool;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Builder
@@ -39,10 +37,11 @@ public class State {
     @Setter
     @AllArgsConstructor
     public static class Data{
-        Long idMember;
+        Long idThisMember;
         MemberData data;
         Update update;
         ConnectionPool connector;
+        TelegramBot bot;
     }
     private Function<Data, List<BaseRequest>> operatorWhichRunsAtStartup = null;
     private Function<Data, List<BaseRequest>> operatorWhoProcessesMessages = null;
@@ -75,4 +74,7 @@ public class State {
     public State previous() {
         return stateReturn != null ? stateReturn : this;
     }
+
+
+
 }
