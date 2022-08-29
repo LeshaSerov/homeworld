@@ -23,7 +23,7 @@ public class StateMachine
     private State currentState;
     
     public StateMachine(String name, String description){
-        defaultState = new State(name,description);
+        defaultState = new State(name, description, Access.Levels.NoNe);
         currentState = defaultState;
     }
 
@@ -41,23 +41,45 @@ public class StateMachine
         return this;
     }
 
-    public StateMachine addPath(String name, String description, String nameButton){
-        currentState.addPath(new State(name,description,nameButton,currentState));
+    public StateMachine addPath(State state){
+        currentState.addPath(state);
+        return this;
+    }
+    public StateMachine addPath(String name, String description, String nameButton, Access.Levels levelAccess){
+        currentState.addPath(new State(name,description,nameButton,currentState,levelAccess));
+        return this;
+    }
+    public StateMachine addPath(String name, Function<State.Data, String> description, String nameButton, Access.Levels levelAccess){
+        currentState.addPath(new State(name,null, nameButton, currentState,levelAccess));
+        currentState.next(name).setOperatorWhoGeneratesDescription(description);
+        currentState.previous();
         return this;
     }
 
     public StateMachine addPathProcessesMessages(Function<State.Data, List<BaseRequest>> operator,
-                                                 String name, String description, String nameButton){
-        currentState.addPath(new State(name, description,nameButton, currentState));
+                                                 String name, String description, String nameButton,
+                                                 Access.Levels levelAccess){
+        currentState.addPath(new State(name, description,nameButton, currentState,levelAccess));
         next(name);
+        currentState.setOperatorWhoProcessesMessages(operator);
+        previous();
+        return this;
+    }
+    public StateMachine addPathProcessesMessages(Function<State.Data, List<BaseRequest>> operator,
+                                                 String name, Function<State.Data, String> description, String nameButton,
+                                                 Access.Levels levelAccess){
+        currentState.addPath(new State(name, null, nameButton, currentState,levelAccess));
+        next(name);
+        currentState.setOperatorWhoGeneratesDescription(description);
         currentState.setOperatorWhoProcessesMessages(operator);
         previous();
         return this;
     }
 
     public StateMachine addPathRunAtStartup(Function<State.Data, List<BaseRequest>> operator,
-                                            String name, String nameButton){
-        currentState.addPath(new State(name,null,nameButton, currentState));
+                                            String name, String nameButton,
+                                            Access.Levels levelAccess){
+        currentState.addPath(new State(name,null,nameButton, currentState,levelAccess));
         next(name);
         currentState.setOperatorWhichRunsAtStartup(operator);
         previous();
@@ -67,22 +89,42 @@ public class StateMachine
     public StateMachine addPathGenerateKeyboard(String nameState, String descriptionState, String nameButtonState,
                                                 Function<State.Data,  List<Pair<String, String>>> operator,
                                                 MemberData.TypeReceivedInformation type,
-                                                String nameNewState, String description){
-        currentState.addPath(new State(nameState,descriptionState,nameButtonState,currentState));
+                                                Access.Levels levelAccess,
+                                                String nameNewState, String description,
+                                                Access.Levels levelAccessNewState){
+        currentState.addPath(new State(nameState,descriptionState,nameButtonState,currentState,levelAccess));
         next(nameState);
-        currentState.addGenerateKeyboard(operator, type, new State(nameNewState,description,null, currentState));
+        currentState.addGenerateKeyboard(operator, type, new State(nameNewState,description,null, currentState,levelAccessNewState));
+        previous();
+        return this;
+    }
+    public StateMachine addPathGenerateKeyboard(String nameState, String descriptionState, String nameButtonState,
+                                                Function<State.Data,  List<Pair<String, String>>> operator,
+                                                MemberData.TypeReceivedInformation type,
+                                                Access.Levels levelAccess,
+                                                String nameNewState, Function<State.Data, String> description,
+                                                Access.Levels levelAccessNewState){
+        currentState.addPath(new State(nameState,descriptionState,nameButtonState,currentState, levelAccess));
+        next(nameState);
+        currentState.addGenerateKeyboard(operator, type, new State(nameNewState,null,null, currentState, levelAccessNewState));
+        next(nameNewState);
+        currentState.setOperatorWhoGeneratesDescription(description);
+        previous();
         previous();
         return this;
     }
 
+
     public StateMachine relocationPathInPathGenerateKeyboard(String nameState, String descriptionState, String nameButtonState,
                                                              Function<State.Data,  List<Pair<String, String>>> operator,
                                                              MemberData.TypeReceivedInformation type,
+                                                             Access.Levels levelAccess,
                                                              String relocationNameState){
         State relocationState = currentState.next(relocationNameState);
-        currentState.addPath(new State(nameState,descriptionState,nameButtonState,currentState));
+        currentState.addPath(new State(nameState,descriptionState,nameButtonState,currentState, levelAccess));
         next(nameState);
         currentState.addGenerateKeyboard(operator, type, relocationState);
+        currentState.next(relocationNameState).setStateReturn(this.getCurrentState());
         previous();
         deletePath(relocationState);
         return this;

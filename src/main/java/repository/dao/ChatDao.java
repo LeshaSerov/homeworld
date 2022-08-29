@@ -16,12 +16,21 @@ public class ChatDao {
 
     public Boolean addMember(Long id_member, Long id_chat, ConnectionPool connector) {
         String SQL = """
-                INSERT INTO members_in_chat (id_chat, id_member) VALUES (?, ?) ON CONFLICT (id_chat, id_member) DO NOTHING;
+                INSERT INTO\s
+                	members_in_chat (id_chat, id_member)\s
+                SELECT
+                	id,
+                	?
+                FROM\s
+                	chats\s
+                WHERE
+                	id_telegram = ?
+                ON CONFLICT (id_chat, id_member) DO NOTHING
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setLong(1, id_chat);
-            preparedStatement.setLong(2, id_member);
+            preparedStatement.setLong(1, id_member);
+            preparedStatement.setLong(2, id_chat);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -33,9 +42,14 @@ public class ChatDao {
         }
     }
 
-    public Boolean deleteMember(Long id_member, Long id_chat, ConnectionPool connector) {
+    public Boolean deleteMember(Long id_member, Long id_chat,  ConnectionPool connector) {
         String SQL = """
-                DELETE FROM members_in_chat WHERE id_chat = ? and id_member = ?;
+                DELETE FROM
+                	members_in_chat
+                WHERE
+                	id_chat =\s
+                	(SELECT id FROM chats WHERE id_telegram = ?	LIMIT 1)
+                	and id_member = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -54,7 +68,18 @@ public class ChatDao {
 
     public Boolean deleteAllMembers(Long id_chat, ConnectionPool connector) {
         String SQL = """
-                DELETE FROM members_in_chat WHERE id_chat = ?;
+                  DELETE FROM
+                    members_in_chat
+                  WHERE
+                    id_chat = (
+                        SELECT
+                            id
+                        FROM
+                            chats
+                        WHERE
+                            id_telegram = ?
+                    );
+                  
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -70,34 +95,47 @@ public class ChatDao {
         }
     }
 
-    public Boolean addChat(Long id, String title, ConnectionPool connector) {
-        String SQL = """
-                INSERT INTO chats (id, title) VALUES (?, ?) ON CONFLICT (id) DO NOTHING;
+    public Integer addChat(Long id, String title, ConnectionPool connector) {
+        String SQL = """             
+                INSERT INTO chats (id_telegram, title)
+                	SELECT
+                		?, ?
+                	WHERE
+                		NOT EXISTS (
+                        	SELECT
+                				id
+                			FROM
+                				chats
+                			WHERE
+                				id_telegram = ?)
+                    RETURNING id;
+                                
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setLong(1, id);
             preparedStatement.setString(2, title);
-            try {
-                return preparedStatement.executeUpdate() != 0;
+            preparedStatement.setLong(3, id);
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+                resultSet.next();
+                return resultSet.getInt(1);
             } catch (SQLException e) {
-                return false;
+                return -1;
             }
         }
         catch (Exception exception){
-            return null;
+            return -1;
         }
     }
 
-    public Boolean editChat(Long id_chat, String title, Boolean ping, ConnectionPool connector) {
+    public Boolean editChat(Long id_chat, String title, ConnectionPool connector) {
         String SQL = """
-                UPDATE chats SET title = ?, ping = ? WHERE id = ?;
+                UPDATE chats SET id_telegram = ?, title = ? WHERE id = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setString(1, title);
-            preparedStatement.setBoolean(2, ping);
-            preparedStatement.setLong(3, id_chat);
+            preparedStatement.setLong(1, id_chat);
+            preparedStatement.setString(2, title);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -111,7 +149,10 @@ public class ChatDao {
 
     public Boolean deleteChat(Long id_chat, ConnectionPool connector) {
         String SQL = """
-                DELETE FROM chats WHERE id = ?;
+                DELETE FROM
+                	chats\s
+                WHERE id = (SELECT id FROM chats WHERE id_telegram = ?	LIMIT 1);
+                
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -127,13 +168,43 @@ public class ChatDao {
         }
     }
 
-    public ArrayList<Member> getAllMemberInChat(Long id_chat, ConnectionPool connector) {
+    public Long getIdTelegram(Integer id_group, ConnectionPool connector) {
+        String SQL = """
+                SELECT
+                	chats.id_telegram
+                FROM
+                	chats
+                WHERE
+                	chats.id = ?;
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setLong(1, id_group);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getLong(1);
+            }
+        }
+        catch (Exception exception){
+            return null;
+        }
+    }
+
+    public ArrayList<Member> getAllMemberInChat(Long id_chat,  ConnectionPool connector) {
         ArrayList<Member> result = new ArrayList<>();
         String SQL = """
-                SELECT members.id, first_name, last_name, user_name
-                FROM members, members_in_chat
-                WHERE members.id=members_in_chat.id_member
-                and id_chat=?
+                SELECT
+                    members.id,
+                    first_name,
+                    last_name,
+                    user_name
+                 FROM
+                    members
+                    
+                    JOIN members_in_chat
+                    ON members.id = members_in_chat.id_member
+                 WHERE
+                    id_chat=?
                 """;
 
         try (Connection connection = connector.CreateConnect();

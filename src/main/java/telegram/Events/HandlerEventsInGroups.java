@@ -12,38 +12,41 @@ import java.util.Arrays;
 
 public class HandlerEventsInGroups {
     public static BaseRequest process(Message message, ConnectionPool connector) {
-    BaseRequest request = null;
-    Long chat_id = message.chat().id();
-    User[] updateNewUser = message.newChatMembers();
-    User updateLeftUser = message.leftChatMember();
+        BaseRequest request = null;
+        Long chat_id = message.chat().id();
+        User[] updateNewUser = message.newChatMembers();
+        User updateLeftUser = message.leftChatMember();
 
-    if (updateNewUser != null && Arrays.stream(updateNewUser).noneMatch(User::isBot)) {
-        AddMemberInChat(chat_id, Arrays.stream(updateNewUser).findFirst().orElse(null), connector);
-        request = new SendMessage(chat_id, "Пользователь пришел в чат.");
-    }
-    else if (updateLeftUser != null) {
-        DeleteMemberInChat(chat_id, updateLeftUser.id(), connector);
-        request = new SendMessage(chat_id, "Пользователь вышел из чата.");
-    }
-    else {
-        AddMemberInChat(chat_id, new User(message.from().id()), connector);
-    }
+        if (updateNewUser != null && Arrays.stream(updateNewUser).noneMatch(User::isBot)) {
+            try {
+                User user = message.from();
+                new MemberDao().addMember(user.id(), user.firstName(), user.lastName(), user.username(), connector);
+                new ChatDao().addMember(user.id(), chat_id, connector);
+            }
+            catch (Exception ignored)
+            {
 
-    return request;
-}
-
-    private static void AddMemberInChat(Long chat_id, User user, ConnectionPool connector) {
-        try {
-            new MemberDao().addMember(user.id(), user.firstName(), user.lastName(), user.username(), connector);
-            new ChatDao().addMember(user.id(), chat_id, connector);
-        } catch (Exception ignored) {
+            }
+            request = new SendMessage(chat_id, "Пользователь пришел в чат.");
         }
-    }
+        else if (updateLeftUser != null) {
+            try {
+                new ChatDao().deleteMember(chat_id, updateLeftUser.id(), connector);
+            }
+            catch (Exception ignored){
 
-    private static void DeleteMemberInChat(Long chat_id, Long id, ConnectionPool connector) {
-        try {
-            new ChatDao().deleteMember(id, chat_id, connector);
-        } catch (Exception ignored) {
+            }
+            request = new SendMessage(chat_id, "Пользователь вышел из чата.");
         }
+        else try {
+                User user = message.from();
+                new MemberDao().addMember(user.id(), user.firstName(), user.lastName(), user.username(), connector);
+                new ChatDao().addChat(message.chat().id(), message.chat().title(), connector);
+                new ChatDao().addMember(user.id(), message.chat().id(), connector);
+            }
+        catch (Exception ignored)
+        {
+        }
+        return request;
     }
 }

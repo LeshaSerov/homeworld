@@ -16,13 +16,14 @@ import java.util.ArrayList;
 public class MemberDao {
     //private final Logger LOGGER = Logger.getLogger(MemberDao.class);
 
-    protected Member getMemberFromResultSet(ResultSet resultSet) {
+    protected Member getMemberBriefFromResultSet(ResultSet resultSet) {
         try {
             return Member.builder()
                     .id(resultSet.getLong(1))
                     .first_name(resultSet.getString(2))
                     .last_name(resultSet.getString(3))
                     .user_name(resultSet.getString(4))
+                    .number_of_warning(0)
                     .build();
         }
         catch (SQLException e){
@@ -31,22 +32,14 @@ public class MemberDao {
         return null;
     }
 
-    protected Member getMemberExtendedFromResultSet(ResultSet resultSet) {
+    protected Member getMemberFromResultSet(ResultSet resultSet) {
         try {
             return Member.builder()
                     .id(resultSet.getLong(1))
                     .first_name(resultSet.getString(2))
                     .last_name(resultSet.getString(3))
                     .user_name(resultSet.getString(4))
-                    .role(Role.builder()
-                            .id(resultSet.getInt(5))
-                            .title(resultSet.getString(6))
-                            .right_to_view(resultSet.getBoolean(7))
-                            .right_ping(resultSet.getBoolean(8))
-                            .right_edit(resultSet.getBoolean(9))
-                            .right_admin(resultSet.getBoolean(10))
-                            .build())
-                    .number_of_warning(resultSet.getInt(11))
+                    .number_of_warning(resultSet.getInt(5))
                     .build();
         }
         catch (SQLException e){
@@ -54,6 +47,30 @@ public class MemberDao {
         }
         return null;
     }
+//    protected Member getMemberExtendedFromResultSet(ResultSet resultSet) {
+//        try {
+//            return Member.builder()
+//                    .id(resultSet.getLong(1))
+//                    .first_name(resultSet.getString(2))
+//                    .last_name(resultSet.getString(3))
+//                    .user_name(resultSet.getString(4))
+//                    .role(Role.builder()
+//                            .id(resultSet.getInt(5))
+//                            .title(resultSet.getString(6))
+//                            .right_to_view(resultSet.getBoolean(7))
+//                            .right_ping(resultSet.getBoolean(8))
+//                            .right_edit(resultSet.getBoolean(9))
+//                            .right_admin(resultSet.getBoolean(10))
+//                            .right_creator(resultSet.getBoolean(11))
+//                            .build())
+//                    .number_of_warning(resultSet.getInt(12))
+//                    .build();
+//        }
+//        catch (SQLException e){
+//            //LOGGER.error("Member creation error");
+//        }
+//        return null;
+//    }
 
     public Boolean addMember(Long id, String first_name, String last_name, String user_name, ConnectionPool connector) {
         String SQL = """
@@ -118,11 +135,24 @@ public class MemberDao {
     public ArrayList<Pair<String,String>> getAllGroups(Long id_member, ConnectionPool connector){
         ArrayList<Pair<String,String>> result = new ArrayList<>();
         String SQL = """
-                select groups.id, groups.title
-                from members, members_in_group, groups
-                where members.id=members_in_group.id_member and
-                groups.id = members_in_group.id_group
-                and members.id = ?
+                SELECT\s
+                	groups.id,\s
+                	groups.title,
+                	projects.title
+                FROM
+                	members
+                	
+                	JOIN members_in_group
+                	ON members.id=members_in_group.id_member
+                	
+                	JOIN groups
+                	ON groups.id = members_in_group.id_group
+                	
+                	JOIN projects
+                	ON groups.id_project = projects.id
+
+                WHERE
+                	members.id =?
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
@@ -130,7 +160,7 @@ public class MemberDao {
             try (ResultSet resultSet = preparedStatement.executeQuery()){
                 while (resultSet.next())
                 {
-                    result.add(new Pair<String,String>(resultSet.getString(1), resultSet.getString(2)));
+                    result.add(new Pair<String,String>(resultSet.getString(1), resultSet.getString(2) + " | " + resultSet.getString(3)));
                 }
             }
         }
@@ -165,8 +195,37 @@ public class MemberDao {
         return result;
     }
 
+    public String getName(Long idThisMember, ConnectionPool connector) {
+        String result = null;
+        String SQL = """
+                SELECT
+                	first_name
+                FROM
+                	members
+                WHERE
+                	members.id = ?;
+                """;
 
-   //Метод просмотр в каких группах есть этот пользователь
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)){
+            preparedStatement.setLong(1, idThisMember);
+            try (ResultSet resultSet = preparedStatement.executeQuery()){
+                while (resultSet.next())
+                {
+                    result = resultSet.getString(1);
+                }
+            }
+        }
+        catch (Exception exception){
+            return null;
+        }
+        return result;
+
+    }
+
+
+
+    //Метод просмотр в каких группах есть этот пользователь
 
 
 

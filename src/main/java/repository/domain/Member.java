@@ -13,4 +13,5 @@ public class Member {
     private String user_name;
     private Integer number_of_warning;
     Role role = null;
+
 }

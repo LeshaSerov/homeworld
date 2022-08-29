@@ -16,4 +16,5 @@ public class Role {
     private Boolean right_ping;
     private Boolean right_edit;
     private Boolean right_admin;
+    private Boolean right_creator;
 }

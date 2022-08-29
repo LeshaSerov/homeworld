@@ -13,8 +13,9 @@ import java.sql.Timestamp;
 @ToString
 public class File {
     private Integer id;
-    private Integer id_group;
-    private Integer id_category;
     private String title;
     private Timestamp data_create;
+    private String nameMember;
+    //Sometimes an empty
+    private String titleCategory;
 }

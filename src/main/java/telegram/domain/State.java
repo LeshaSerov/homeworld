@@ -26,10 +26,35 @@ public class State {
     private final String nameButton;
 
     @ToString.Exclude
-    private final State stateReturn;
+    @NonNull
+    private State stateReturn;
+
+    private final Access.Levels levelAccess;
 
     private State stateNext = null;
 
+    public State(String name, String description, Access.Levels levels) {
+        this.name = name;
+        this.description = description;
+        this.nameButton = null;
+        this.levelAccess = levels;
+        this.stateReturn = this;
+    }
+
+   /* public State(State state)
+    {
+        this.name = state.name;
+        this.description = state.description;
+        this.nameButton = state.nameButton;
+        this.levelAccess = state.levelAccess;
+        this.stateReturn = state.stateReturn;
+        this.stateNext = state.stateNext;
+        this.paths = state.paths;
+        this.operatorWhoGeneratesDescription = state.operatorWhoGeneratesDescription;
+        this.operatorWhichGeneratesKeyboard = state.operatorWhichGeneratesKeyboard;
+        this.operatorWhichRunsAtStartup = state.operatorWhichRunsAtStartup;
+        this.operatorWhoProcessesMessages = state.operatorWhoProcessesMessages;
+    }*/
 
     //Механизм, обеспечивающий возможность подключать свои функции для обработки состояний
     @Builder
@@ -47,6 +72,7 @@ public class State {
     private Function<Data, List<BaseRequest>> operatorWhoProcessesMessages = null;
     private Function<Data,  List<Pair<String, String>>> operatorWhichGeneratesKeyboard = null;
     private MemberData.TypeReceivedInformation type = null;
+    private Function<Data, String> operatorWhoGeneratesDescription = null;
     public void addGenerateKeyboard(Function<Data,  List<Pair<String, String>>> operator, MemberData.TypeReceivedInformation type, State stateNext) {
         this.operatorWhichGeneratesKeyboard = operator;
         this.type = type;
@@ -56,13 +82,6 @@ public class State {
     //Список Путей-Состояний по которым генерируется клавиатура
     private Vector<State> paths = new Vector<>();
 
-    //Для Дефолтного Состояния - возможно стоит удалить
-    public State(String name, String description) {
-        this.name = name;
-        this.description = description;
-        this.nameButton = null;
-        this.stateReturn = this;
-    }
     public void addPath(State state) {
         paths.add(state);
     }
@@ -74,7 +93,5 @@ public class State {
     public State previous() {
         return stateReturn != null ? stateReturn : this;
     }
-
-
 
 }

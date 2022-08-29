@@ -5,7 +5,6 @@ import repository.domain.Category;
 import repository.domain.File;
 import util.ConnectionPool.ConnectionPool;
 
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -16,9 +15,24 @@ public class FileInGroupDao {
         try {
             return File.builder()
                     .id(resultSet.getInt(1))
-                    .id_category(resultSet.getInt(2))
-                    .title(resultSet.getString(3))
-                    .data_create(resultSet.getTimestamp(4))
+                    .title(resultSet.getString(2))
+                    .data_create(resultSet.getTimestamp(3))
+                    .nameMember(resultSet.getString(4))
+                    .build();
+        } catch (SQLException e) {
+            //LOGGER.error("Role creation error");
+        }
+        return null;
+    }
+
+    protected File getFileExtendedFromResultSet(ResultSet resultSet) {
+        try {
+            return File.builder()
+                    .id(resultSet.getInt(1))
+                    .title(resultSet.getString(2))
+                    .data_create(resultSet.getTimestamp(3))
+                    .nameMember(resultSet.getString(4))
+                    .titleCategory(resultSet.getString(5))
                     .build();
         } catch (SQLException e) {
             //LOGGER.error("Role creation error");
@@ -39,9 +53,9 @@ public class FileInGroupDao {
         return null;
     }
 
-    public Boolean addFile(Integer id, Integer id_category, String title, ConnectionPool connector) {
+    public Boolean addFile(Integer id, Integer id_category, String title, Long id_member, ConnectionPool connector) {
         String SQL = """
-                INSERT INTO files (id, id_category, title, data_create) VALUES (?, ?, ?, ?) ON CONFLICT (id, id_category) DO NOTHING;
+                INSERT INTO files (id, id_category, title, data_create, id_member) VALUES (?, ?, ?, ?, ?) ON CONFLICT (id, id_category) DO NOTHING;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -49,6 +63,7 @@ public class FileInGroupDao {
             preparedStatement.setInt(2, id_category);
             preparedStatement.setString(3, title);
             preparedStatement.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
+            preparedStatement.setLong(5, id_member);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -60,15 +75,14 @@ public class FileInGroupDao {
         }
     }
 
-    public Boolean editFile(Integer id, Integer id_category, String title, ConnectionPool connector) {
+    public Boolean editFile(Integer id, String title, ConnectionPool connector) {
         String SQL = """
-                UPDATE files SET id_category = ?, title = ? WHERE id = ?;
+                UPDATE files SET title = ? WHERE id = ?;
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
-            preparedStatement.setInt(3, id);
-            preparedStatement.setInt(1, id_category);
-            preparedStatement.setString(2, title);
+            preparedStatement.setString(1, title);
+            preparedStatement.setInt(2, id);
             try {
                 return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
@@ -116,23 +130,22 @@ public class FileInGroupDao {
         }
     }
 
-    public Integer addCategory(Integer id_group, String title, ConnectionPool connector) {
+    public Boolean addCategory(Integer id_group, String title, ConnectionPool connector) {
         String SQL = """
-                INSERT INTO categories (id_group, title) VALUES (?, ?) RETURNING id;
+                INSERT INTO categories (id_group, title) VALUES (?, ?);
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
             preparedStatement.setString(2, title);
-            try (ResultSet resultSet = preparedStatement.executeQuery();) {
-                resultSet.next();
-                return resultSet.getInt(1);
+            try {
+                return preparedStatement.executeUpdate() != 0;
             } catch (SQLException e) {
-                return -1;
+                return false;
             }
         }
         catch (Exception exception){
-            return null;
+            return false;
         }
     }
 
@@ -214,14 +227,31 @@ public class FileInGroupDao {
     public ArrayList<File> getAllFiles(Integer id_group, ConnectionPool connector) {
         ArrayList<File> result = new ArrayList<>();
         String SQL = """
-                SELECT files.id, files.id_category, files.title, files.data_create FROM files, categories, groups WHERE categories.id_group=groups.id and groups.id = ?
-                """;
+                SELECT DISTINCT
+                	files.id,
+                    files.title,
+                    files.data_create,
+                    members.first_name,
+                    categories.title
+                FROM
+                	files
+                	
+                	JOIN categories
+                	ON files.id_category = categories.id
+                	
+                	JOIN groups
+                	ON categories.id_group = groups.id
+                	
+                	JOIN members
+                	ON files.id_member = members.id
+                	
+                WHERE groups.id = ?""";
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
             preparedStatement.setInt(1, id_group);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 while (resultSet.next()) {
-                    result.add(getFileFromResultSet(resultSet));
+                    result.add(getFileExtendedFromResultSet(resultSet));
                 }
             }
         }
@@ -234,7 +264,21 @@ public class FileInGroupDao {
     public ArrayList<File> getAllFilesInCategory(Integer id_category, ConnectionPool connector) {
         ArrayList<File> result = new ArrayList<>();
         String SQL = """
-                SELECT * FROM files WHERE id_category = ?
+                SELECT DISTINCT
+                    files.id,
+                    files.title,
+                    files.data_create,
+                    members.first_name
+                FROM
+                    files
+                    
+                    JOIN categories
+                    ON files.id_category = categories.id
+                    
+                    JOIN members
+                    ON files.id_member = members.id
+                    
+                WHERE categories.id = ?
                 """;
         try (Connection connection = connector.CreateConnect();
              PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
@@ -269,4 +313,25 @@ public class FileInGroupDao {
         }
     }
 
+    public String getTitleFile(Integer id, ConnectionPool connector) {
+        String SQL = """
+                SELECT DISTINCT
+                    title
+                FROM
+                    files
+                  WHERE id = ?
+                  LIMIT 1;
+                """;
+        try (Connection connection = connector.CreateConnect();
+             PreparedStatement preparedStatement = connection.prepareStatement(SQL)) {
+            preparedStatement.setInt(1, id);
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                resultSet.next();
+                return resultSet.getString(1);
+            }
+        }
+        catch (Exception exception){
+            return null;
+        }
+    }
 }

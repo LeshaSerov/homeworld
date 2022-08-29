@@ -20,20 +20,15 @@ public class HandlerEventsModifyRightsBot {
         String answer = null;
 
         ChatMember.Status status = myChatMember.newChatMember().status();
-        ChatMember.Status statusKick = ChatMember.Status.kicked;
+        ChatMember.Status statusLeft = ChatMember.Status.left;
         ChatMember.Status statusMember = ChatMember.Status.member;
         ChatMember.Status statusAdministrator = ChatMember.Status.administrator;
 
-        if (status == statusKick) {
-            DeleteChat(chat, connector);
-        } else if (status == statusMember) {
-            answer = """
-                    Привет)
-                    Пожалуйста, выдай мне админские права,
-                    иначе я не смогу работать в этом чате.""";
-            request = new SendMessage(chat_id, answer);
-        } else if (status == statusAdministrator) {
-            AddChat(chat, connector);
+        if (status == statusAdministrator) {
+            try {
+                new ChatDao().addChat(chat_id, chat.title(), connector);
+            } catch (Exception ignored) {
+            }
             answer = """
                     Привет)
                     Я Помощник.
@@ -41,22 +36,14 @@ public class HandlerEventsModifyRightsBot {
                     Приступаю к своей работе""";
             request = new SendMessage(chat_id, answer);
         }
+        else if (status == statusLeft)
+        {
+            try {
+                new ChatDao().deleteChat(chat_id, connector);
+            } catch (Exception ignored) {
+            }
+        }
         return request;
-    }
-
-    private static void AddChat(Chat chat, ConnectionPool connector) {
-        try {
-            Long chat_id = parseLong(chat.id().toString());
-            new ChatDao().addChat(chat_id, chat.title(), connector);
-        } catch (Exception ignored) {
-        }
-    }
-
-    private static void DeleteChat(Chat chat, ConnectionPool connector) {
-        try {
-            new ChatDao().deleteChat(chat.id(), connector);
-        } catch (Exception ignored) {
-        }
     }
 
 }

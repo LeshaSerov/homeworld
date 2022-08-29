@@ -1,15 +1,13 @@
 package repository.domain;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @Builder
 @Getter
 @Setter
 @ToString
-public class Chat {
+public class Project {
     private Long id;
     private String title;
+    private Long id_chat;
 }

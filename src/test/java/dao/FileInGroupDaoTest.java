@@ -17,7 +17,7 @@ public class FileInGroupDaoTest {
     @SneakyThrows
     public void  FileInGroupTest()
     {
-        ConnectionPool connector = new ConnectionPool();
+        /*ConnectionPool connector = new ConnectionPool();
 
         Integer id_group =new GroupDao().addGroup("12", connector);
         Integer id_category = new FileInGroupDao().addCategory(id_group,"a", connector);
@@ -58,7 +58,7 @@ public class FileInGroupDaoTest {
         files = new FileInGroupDao().getAllFilesInCategory(id_category, connector);
         Assert.assertEquals(0, files.size());
 
-      new GroupDao().deleteGroup(id_group, connector);
+      new GroupDao().deleteGroup(id_group, connector);*/
 
     }
 }

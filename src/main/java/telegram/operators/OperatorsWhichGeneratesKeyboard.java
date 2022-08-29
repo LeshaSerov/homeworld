@@ -2,14 +2,12 @@ package telegram.operators;
 
 import kotlin.Pair;
 import repository.dao.*;
-import repository.domain.Category;
-import repository.domain.Member;
-import repository.domain.Role;
+import repository.domain.*;
 import telegram.domain.State;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class OperatorsWhichGeneratesKeyboard {
 
@@ -23,7 +21,14 @@ public class OperatorsWhichGeneratesKeyboard {
         List<Pair<String, String>> list = new ArrayList<>();
         for (Member x :
                 members) {
-            list.add(new Pair<>(Long.toString(x.getId()), x.getFirst_name()));
+            String warns = "";
+            if (x.getNumber_of_warning() != 0) {
+                for (int i = 0; i < x.getNumber_of_warning(); i++) {
+                    warns += "❌";
+                }
+            }
+            String text = x.getFirst_name() + " | " + new GroupDao().getMembersRole(x.getId(), data.getData().getIdGroup(), data.getConnector()).getTitle() + warns;
+            list.add(new Pair<String, String>(x.getId().toString(), text));
         }
         return list;
     }
@@ -40,23 +45,22 @@ public class OperatorsWhichGeneratesKeyboard {
 
     public static List<Pair<String, String>> listNonMembers(State.Data data) {
         ArrayList<Pair<String, String>> list = new ArrayList<>();
-        ArrayList<Member> membersInGroup = new GroupDao().getAllMemberInGroup(data.getData().getIdGroup(), data.getConnector());
-        ArrayList<Pair<String,String>> chats = new MemberDao().getAllChats(data.getIdThisMember(), data.getConnector());
-        for (Pair<String,String> idChat: chats) {
-            ArrayList<Member> members = new ChatDao()
-                    .getAllMemberInChat(Long.valueOf(idChat.component1()), data.getConnector());
-            for (Member x : members) {
-                boolean a = !list.stream().anyMatch(p-> Objects.equals(p.component2(), x.getFirst_name()));
-                boolean b = !membersInGroup.stream().anyMatch(p-> Objects.equals(p.getId(), x.getId()));
-                if (a && b)
-                    list.add(new Pair<>(Long.toString(x.getId()), x.getFirst_name()));
-            }
+        ArrayList<Member> membersNotInGroup = new GroupDao().getAllMemberNotInGroup(data.getIdThisMember(), data.getData().getIdGroup(), data.getConnector());
+        for (Member x : membersNotInGroup) {
+            if (x.getLast_name() != null && x.getUser_name() != null)
+                list.add(new Pair<String, String>(x.getId().toString(), x.getFirst_name() + ' ' + x.getLast_name() + " (" + x.getUser_name() + ")"));
+            else if (x.getLast_name() != null)
+                list.add(new Pair<String, String>(x.getId().toString(), x.getFirst_name() + ' ' + x.getLast_name()));
+            else if (x.getUser_name() != null)
+                list.add(new Pair<String, String>(x.getId().toString(), x.getFirst_name() + " (" + x.getUser_name() + ")"));
+            else
+                list.add(new Pair<String, String>(x.getId().toString(), x.getFirst_name()));
         }
         return list;
     }
 
     public static List<Pair<String, String>> listCategories(State.Data data) {
-        ArrayList<Category> categories = new FileInGroupDao().getAllCategories(data.getData().getIdGroup(),data.getConnector());
+        ArrayList<Category> categories = new FileInGroupDao().getAllCategories(data.getData().getIdGroup(), data.getConnector());
         List<Pair<String, String>> list = new ArrayList<>();
         for (Category x :
                 categories) {
@@ -65,4 +69,76 @@ public class OperatorsWhichGeneratesKeyboard {
         return list;
     }
 
+    public static List<Pair<String, String>> listWarns(State.Data data) {
+        Integer id_project = new GroupDao().getProjectGroup(data.getData().getIdGroup(), data.getConnector());
+        ArrayList<Warning> warnings = new GroupDao().getAllWarningsMemberFromProject(data.getData().getIdOtherMember(), id_project, data.getConnector());
+        List<Pair<String, String>> list = new ArrayList<>();
+        for (Warning x : warnings) {
+            list.add(new Pair<>(Long.toString(x.getId()),
+                    x.getCause()
+                    + " | " + new MemberDao().getName(x.getId_cautioning(), data.getConnector())
+            ));
+        }
+        return list;
+    }
+
+    public static List<Pair<String, String>> listFiles(State.Data data) {
+        ArrayList<Pair<String, String>> list = new ArrayList<>();
+        ArrayList<File> files;
+
+        files = new FileInGroupDao().getAllFiles(
+                data.getData().getIdGroup(),
+                data.getConnector()
+        );
+
+        for (File x : files) {
+            list.add(new Pair<String, String>(x.getId().toString(),
+                    x.getTitle()
+                            + " | " + x.getNameMember()
+                            + " | " + x.getTitleCategory()
+                            + " | " + new SimpleDateFormat("d MMM").format(x.getData_create())
+
+            ));
+        }
+
+        return list;
+    }
+
+    public static List<Pair<String, String>> listFilesInCategory(State.Data data) {
+        ArrayList<Pair<String, String>> list = new ArrayList<>();
+        ArrayList<File> files;
+
+        files = new FileInGroupDao().getAllFilesInCategory(
+                data.getData().getIdCategory(),
+                data.getConnector()
+        );
+
+        for (File x : files) {
+            list.add(new Pair<String, String>(x.getId().toString(),
+                    x.getTitle()
+                            + " | " + x.getNameMember()
+                            + " | " + new SimpleDateFormat("d MMM").format(x.getData_create())
+            ));
+        }
+
+        return list;
+    }
+
+    public static List<Pair<String, String>> listProjects(State.Data data) {
+        List<Pair<String, String>> list = new ProjectDao().getAllProjects(data.getIdThisMember(), data.getConnector());
+        return list;
+    }
+
+    public static List<Pair<String, String>> listCreatedProjects(State.Data data) {
+        List<Pair<String, String>> list = new ProjectDao().getAllCreatedProjects(data.getIdThisMember(), data.getConnector());
+        return list;
+    }
+
+    public static List<Pair<String, String>> listChats(State.Data data) {
+        return new MemberDao().getAllChats(data.getIdThisMember(), data.getConnector());
+    }
+
+    public static List<Pair<String, String>> listChatsUnlinkedProjects(State.Data data) {
+        return new ProjectDao().getAllChatsUnlinkedProjects(data.getIdThisMember(), data.getConnector());
+    }
 }

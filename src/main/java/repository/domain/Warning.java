@@ -15,7 +15,7 @@ public class Warning {
     private Integer id;
     private Integer id_group;
     private Long id_member;
-    private Integer id_cautioning;
+    private Long id_cautioning;
     private String cause;
     private Timestamp date;
     private Integer deadline;
