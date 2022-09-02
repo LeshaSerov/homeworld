@@ -10,6 +10,7 @@ import com.pengrad.telegrambot.request.*;
 import com.pengrad.telegrambot.response.BaseResponse;
 import com.pengrad.telegrambot.response.SendResponse;
 import kotlin.Pair;
+import okhttp3.Response;
 import repository.dao.ChatDao;
 import repository.dao.GroupDao;
 import repository.dao.MemberDao;
@@ -31,12 +32,11 @@ public class Bot {
     private final ArrayList<BaseResponse> lastResponses = new ArrayList<>();
 
     public void start() {
-        //Initiator.reset(connector);
         System.out.println("Start");
         new Thread(() ->{
             while(true){
                 GroupDao.CheckWarning(connector);
-                 System.out.println("Я проснулся");
+                 //System.out.println("Я проснулся");
                 try {
                     Thread.sleep(300000);
                 } catch (InterruptedException e) {
@@ -60,6 +60,8 @@ public class Bot {
             List<BaseRequest> requests = new ArrayList<>();
             InformantUpdate informant = definitionIdAndTypeUpdate(update);
 
+
+            //TODO:ПЕРЕДЕЛАТЬ
             {
                 //Тут добавить метод который соберет в себе все левые методы
                 //requests.addAll(null);
@@ -70,17 +72,10 @@ public class Bot {
                         requests.add(HandlerEventsInGroups.process(update.message(), connector));
                         requests.add(HandlerCommands.process(update.message(), connector));
                         if (update.message().leftChatMember() != null && Objects.equals(update.message().leftChatMember().username(), "AdviserAssistantBot")) {
-
-                            System.out.println("Удаляю чат");
                             new ChatDao().deleteChat(new Chat().id(), connector);
                         }
                     }
                 }
-                for (BaseRequest x : requests) {
-                    if (x != null)
-                        bot.execute(x);
-                }
-                requests.clear();
             }
 
             //Проверка, что сообщение пишется боту
@@ -114,8 +109,9 @@ public class Bot {
                             requests.add(new DeleteMessage(informant.idChat, vault.getIdMessage()));
                     } else if (message.text() != null && Objects.equals(message.text(), "/reboot") && message.chat().id() == 1182966178) {
                         controllerStates.forEach((x, z) -> requests.add(new SendMessage(x, "Перезагрузка бота")));
+                        Boolean result = Initiator.reset(connector);
+                        controllerStates.forEach((x, z) -> requests.add(new SendMessage(x, "Успешно: " + result)));
                         controllerStates.clear();
-                        Initiator.reset(connector);
                     } else if (vaultState != null && vaultState.getOperatorWhoProcessesMessages() != null) {
                         requests.addAll(vaultState.getOperatorWhoProcessesMessages()
                                 .apply(new State.Data(informant.idMember, vault, update, connector, bot)));
@@ -137,9 +133,9 @@ public class Bot {
                 } else if (informant.type == TypeUpdate.CallbackQuery) {
                     Integer idMessage = update.callbackQuery().message().messageId();
                     String text = update.callbackQuery().data();
-                    if ((vault == null) || (!Objects.equals(vault.getIdMessage(), idMessage)))
+                    if ((vault == null) || (!Objects.equals(vault.getIdMessage(), idMessage))) {
                         requests.add(new DeleteMessage(informant.idChat, update.callbackQuery().message().messageId()));
-                    else {
+                    }else {
                         if (Objects.equals(text, "Назад")) {
                             if (vaultState.getOperatorWhichGeneratesKeyboard() != null) {
                                 vault.setPreviousStateGenerateKeyboard(null);
@@ -156,8 +152,6 @@ public class Bot {
                                     .showAlert(false));
                         } else {
                             State stateNext = null;
-
-
 
                             //Сохранение данных с кнопки, которую только что нажали
                             if (vaultState.getOperatorWhichGeneratesKeyboard() != null) {
@@ -185,19 +179,12 @@ public class Bot {
                                         vault.setIsReturn(false);
                                     }
                                 }
-
                             }
                         }
                     }
                 }
 
-                for (BaseRequest x : requests) {
-                    if (x != null)
-                        bot.execute(x);
-                }
-                requests.clear();
-
-                //Генерация Сообщений С клавиатурами
+                //Генерация сообщения состояния
                 vault = controllerStates.get(informant.idMember);
                 if (vault != null && Objects.equals(informant.idMember, informant.idChat)) {
                     vaultState = vault.getState();
@@ -237,35 +224,14 @@ public class Bot {
                     } else {
                         BaseResponse response = bot.execute(new EditMessageText(informant.idChat, vault.getIdMessage(), description)
                                 .replyMarkup(inlineKeyboardMarkup).parseMode(ParseMode.MarkdownV2));
+                        System.out.println(response.description());
                     }
                 }
-               /*
-                for (BaseRequest x : requests) {
-                    if (x != null) {
-                        lastResponses.clear(); //Это для тестирования можно удалить если что
-                        //long start = System.currentTimeMillis();
-                        BaseResponse response = bot.execute(x);
-                        long finish = System.currentTimeMillis();
-                        long elapsed = finish - start;
-                        System.out.println("Прошло времени, мс: " + elapsed + " " + x.getMethod());
-                        if (!response.isOk()) {
-                            lastResponses.add(response);
-                            if (update.callbackQuery() != null && response.description().startsWith("Bad Request: message is not modified")) {
-                                bot.execute(new AnswerCallbackQuery(update.callbackQuery().id()).text(""));
-                            } else if (response.description().startsWith("Bad Request: message is not modified")) {
-                                bot.execute(new SendMessage(informant.idChat, ""));
-                            } else
-                                bot.execute(new SendMessage(informant.idChat,
-                                        "ErrorCode: " + response.errorCode() + "\n" +
-                                                "Description: " + response.description()));
-                        }
-                    }
-                }*/
-
             }
 
         } catch (RuntimeException e) {
             if (update.callbackQuery() != null) {
+                System.out.println(e.getCause() + "\n" + e.fillInStackTrace());
                 bot.execute(new AnswerCallbackQuery(update.callbackQuery().id()).text("Ошибка обработки нажатия кнопки"));
                 controllerStates.get(update.callbackQuery().from().id()).previous();
             } else {
@@ -273,7 +239,31 @@ public class Bot {
                 controllerStates.get(update.message().from().id()).previous();
             }
         } catch (Exception e) {
-            System.out.println("Ошибка чего то сломалось! как ты смог!");
+//            System.out.println("Ошибка чего то сломалось! как ты смог!");
+        }
+    }
+
+    private void runRequests(TelegramBot bot, Update update, InformantUpdate informant, List<BaseRequest> requests){
+        for (BaseRequest x : requests) {
+            if (x != null) {
+                lastResponses.clear(); //Это для тестирования можно удалить если что
+                long start = System.currentTimeMillis();
+                BaseResponse response = bot.execute(x);
+                long finish = System.currentTimeMillis();
+                long elapsed = finish - start;
+                System.out.println("Прошло времени, мс: " + elapsed + " " + x.getMethod());
+                if (!response.isOk()) {
+                    lastResponses.add(response);
+                    if (update.callbackQuery() != null && response.description().startsWith("Bad Request: message is not modified")) {
+                        bot.execute(new AnswerCallbackQuery(update.callbackQuery().id()).text(""));
+                    } else if (response.description().startsWith("Bad Request: message is not modified")) {
+                        bot.execute(new SendMessage(informant.idChat, ""));
+                    } else
+                        bot.execute(new SendMessage(informant.idChat,
+                                "ErrorCode: " + response.errorCode() + "\n" +
+                                        "Description: " + response.description()));
+                }
+            }
         }
     }
 

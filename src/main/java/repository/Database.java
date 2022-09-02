@@ -72,7 +72,7 @@ public class Database {
                     "id_category" integer,
                     "title" char varying(150) NOT NULL,
                     "data_create" timestamp without time zone NOT NULL,
-                    "id_member" bigint NOT NULL
+                    "id_member" bigint NOT NULL,
                     PRIMARY KEY ("id", "id_category")
                 );
                                 

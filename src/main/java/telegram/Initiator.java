@@ -27,12 +27,16 @@ public class Initiator {
         //Объявление машины состояний
         StateMachine stateMachine = new StateMachine(
                 "Default",
-                "Стандартное состояние"
+                "Начальное Состояние"
         );
 
         stateMachine.addPath(
                 "SelectProject",
-                "Группу необходимо \nзакрепить за проектом, \nдля этого создайте свой проект \nили выберите из списка\\.",
+                """
+                        Для создания группы
+                        выберите или создайте проект
+                        к которому она будет прикреплена\\.
+                        """,
                 "Добавить Группу",
                 Access.Levels.NoNe
         ).next("SelectProject");

@@ -1,5 +1,6 @@
 package telegram.domain;
 
+import com.pengrad.telegrambot.model.Update;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
